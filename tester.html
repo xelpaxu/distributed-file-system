@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DFS Fault Tester</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0a0a0f;
+  --surface:   #111118;
+  --surface2:  #1a1a24;
+  --border:    #252535;
+  --border2:   #303045;
+  --txt:       #e2e0f0;
+  --txt2:      #8885aa;
+  --txt3:      #4a4870;
+  --accent:    #7c6cfa;
+  --accent2:   #a395ff;
+  --green:     #39e88a;
+  --red:       #ff5577;
+  --orange:    #ffaa44;
+  --blue:      #44aaff;
+  --mono:      'JetBrains Mono', monospace;
+  --sans:      'Space Grotesk', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--txt);
+  overflow: hidden;
+}
+
+/* ── layout ── */
+.shell {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: 52px 1fr;
+  height: 100vh;
+}
+
+/* ── topbar ── */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+.tb-left { display: flex; align-items: center; gap: 14px; }
+.logo {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 600; letter-spacing: -0.02em;
+}
+.logo-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.divider { width: 1px; height: 18px; background: var(--border2); }
+.target-url {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-family: var(--mono); color: var(--txt2);
+}
+.target-url input {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 9px;
+  font-family: var(--mono); font-size: 11px; color: var(--txt);
+  outline: none; width: 220px;
+  transition: border-color 0.15s;
+}
+.target-url input:focus { border-color: var(--accent); }
+
+.tb-right { display: flex; align-items: center; gap: 10px; }
+.status-chip {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-family: var(--mono); color: var(--txt2);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 99px; padding: 4px 12px;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--txt3); flex-shrink: 0; }
+.dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+.dot.paused { background: var(--orange); }
+.dot.error  { background: var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* ── sidebar ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.section-head {
+  padding: 14px 16px 10px;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.12em;
+  color: var(--txt3); text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+/* scenarios list */
+.scenarios { flex: 1; overflow-y: auto; padding: 8px; }
+.scenarios::-webkit-scrollbar { width: 3px; }
+.scenarios::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.scenario-item {
+  padding: 10px 12px; border-radius: 9px;
+  border: 1px solid transparent;
+  cursor: pointer; margin-bottom: 4px;
+  transition: all 0.15s;
+  position: relative;
+}
+.scenario-item:hover { background: var(--surface2); border-color: var(--border); }
+.scenario-item.selected { background: var(--surface2); border-color: var(--accent); }
+.scenario-item.running { border-color: var(--green); }
+.si-name { font-size: 12px; font-weight: 500; color: var(--txt); margin-bottom: 3px; }
+.si-desc { font-size: 10px; font-family: var(--mono); color: var(--txt3); line-height: 1.5; }
+.si-tag {
+  display: inline-block; font-size: 8px; font-family: var(--mono);
+  padding: 2px 6px; border-radius: 4px; margin-top: 5px;
+  font-weight: 500; letter-spacing: 0.06em;
+}
+.tag-fault   { background: #3a1525; color: var(--red); }
+.tag-chaos   { background: #3a2a10; color: var(--orange); }
+.tag-perf    { background: #102035; color: var(--blue); }
+.tag-normal  { background: #102515; color: var(--green); }
+
+/* controls */
+.controls {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.btn {
+  width: 100%; padding: 10px;
+  border-radius: 8px; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  transition: all 0.15s; letter-spacing: -0.01em;
+}
+.btn:active { transform: scale(0.97); }
+.btn-run  { background: var(--accent); color: #fff; }
+.btn-run:hover { background: var(--accent2); }
+.btn-run:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-stop { background: var(--surface2); color: var(--red); border: 1px solid #3a1525; }
+.btn-stop:hover { background: #1a0a10; }
+.btn-stop:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.speed-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 4px 0;
+}
+.speed-lbl { font-size: 10px; font-family: var(--mono); color: var(--txt3); }
+.speed-btns { display: flex; gap: 4px; }
+.sp-btn {
+  font-size: 10px; font-family: var(--mono); padding: 3px 8px;
+  border-radius: 5px; border: 1px solid var(--border);
+  background: var(--surface2); color: var(--txt2);
+  cursor: pointer; transition: all 0.12s;
+}
+.sp-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sp-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── main area ── */
+.main {
+  display: grid;
+  grid-template-rows: 1fr 220px;
+  overflow: hidden;
+}
+
+/* preview iframe area */
+.preview-wrap {
+  position: relative;
+  overflow: hidden;
+  background: #f7f6f3;
+}
+.preview-label {
+  position: absolute; top: 10px; right: 12px; z-index: 20;
+  font-size: 9px; font-family: var(--mono); color: var(--txt3);
+  background: rgba(0,0,0,0.6); border-radius: 5px; padding: 3px 8px;
+  pointer-events: none;
+}
+iframe#dfs-frame {
+  width: 100%; height: 100%;
+  border: none;
+  pointer-events: none; /* ghost controls it */
+}
+.iframe-overlay {
+  position: absolute; inset: 0; z-index: 10;
+  pointer-events: none;
+}
+
+/* ghost cursor */
+#ghost-cursor {
+  position: absolute;
+  width: 22px; height: 22px;
+  pointer-events: none;
+  z-index: 100;
+  transition: none;
+  display: none;
+  filter: drop-shadow(0 2px 8px rgba(124,108,250,0.6));
+}
+#ghost-cursor svg { width: 22px; height: 22px; }
+.ghost-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 99;
+}
+.ghost-ring.click-anim {
+  animation: clickring 0.45s ease-out forwards;
+}
+@keyframes clickring {
+  0%   { opacity: 0.9; transform: translate(-50%,-50%) scale(0.6); }
+  100% { opacity: 0;   transform: translate(-50%,-50%) scale(2); }
+}
+
+/* step tooltip */
+#step-tooltip {
+  position: absolute;
+  left: 0; top: 0;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 9px;
+  padding: 7px 12px;
+  font-size: 11px; font-family: var(--mono); color: var(--accent2);
+  pointer-events: none;
+  z-index: 110;
+  max-width: 260px;
+  white-space: nowrap;
+  display: none;
+  box-shadow: 0 4px 20px rgba(124,108,250,0.25);
+}
+
+/* ── log panel ── */
+.log-panel {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.log-head2 {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.log-head2-title { font-size: 10px; font-family: var(--mono); color: var(--txt3); letter-spacing: 0.08em; text-transform: uppercase; }
+.log-actions { display: flex; gap: 8px; align-items: center; }
+.log-clear2 { font-size: 10px; font-family: var(--mono); color: var(--txt3); background: none; border: none; cursor: pointer; padding: 0; }
+.log-clear2:hover { color: var(--txt2); }
+.progress-bar {
+  height: 2px; background: var(--border); flex-shrink: 0;
+  position: relative; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--accent);
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.log-body {
+  flex: 1; overflow-y: auto;
+  padding: 10px 16px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.9;
+}
+.log-body::-webkit-scrollbar { width: 3px; }
+.log-body::-webkit-scrollbar-thumb { background: var(--border2); }
+
+.ll { display: flex; gap: 10px; align-items: baseline; animation: li-in 0.2s ease; }
+@keyframes li-in { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:none; } }
+.ll-t { color: var(--txt3); flex-shrink: 0; min-width: 56px; }
+.ll-tag {
+  font-size: 9px; font-weight: 600; letter-spacing: 0.08em;
+  padding: 1px 6px; border-radius: 4px; flex-shrink: 0;
+  text-transform: uppercase;
+}
+.t-ok   { background: #0d2a18; color: var(--green); }
+.t-err  { background: #2a0d15; color: var(--red); }
+.t-warn { background: #2a1d08; color: var(--orange); }
+.t-info { background: #0d1a2a; color: var(--blue); }
+.t-sys  { background: #1a1a24; color: var(--txt3); }
+.t-step { background: #1a1530; color: var(--accent2); }
+.ll-m { color: var(--txt2); }
+.ll-m .hi   { color: var(--green); }
+.ll-m .err  { color: var(--red); }
+.ll-m .acc  { color: var(--accent2); }
+.ll-m .dim  { color: var(--txt3); }
+
+/* result badge row */
+.result-summary {
+  margin: 8px 0 0;
+  display: flex; gap: 8px; align-items: center;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.rs-badge {
+  font-size: 11px; font-family: var(--mono);
+  padding: 3px 10px; border-radius: 6px;
+}
+.rs-pass { background: #0d2a18; color: var(--green); }
+.rs-fail { background: #2a0d15; color: var(--red); }
+.rs-idle { background: var(--surface2); color: var(--txt3); }
+.rs-label { font-size: 11px; font-family: var(--mono); color: var(--txt3); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- topbar -->
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="logo">
+        <div class="logo-icon">🧪</div>
+        DFS Fault Tester
+      </div>
+      <div class="divider"></div>
+      <div class="target-url">
+        <span style="color:var(--txt3)">target →</span>
+        <input type="text" id="frame-url" value="frontend.html" placeholder="path or URL to DFS frontend" />
+        <button class="sp-btn" onclick="loadFrame()">load</button>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="status-chip">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-label">idle</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- sidebar -->
+  <div class="sidebar">
+    <div class="section-head">Test Scenarios</div>
+    <div class="scenarios" id="scenarios-list"></div>
+    <div class="controls">
+      <div class="speed-row">
+        <span class="speed-lbl">speed</span>
+        <div class="speed-btns">
+          <button class="sp-btn" data-speed="2000" onclick="setSpeed(this)">slow</button>
+          <button class="sp-btn active" data-speed="900" onclick="setSpeed(this)">normal</button>
+          <button class="sp-btn" data-speed="350" onclick="setSpeed(this)">fast</button>
+        </div>
+      </div>
+      <button class="btn btn-run" id="btn-run" onclick="runSelected()">▶ Run Scenario</button>
+      <button class="btn btn-stop" id="btn-stop" disabled onclick="stopTest()">■ Stop</button>
+    </div>
+  </div>
+
+  <!-- main -->
+  <div class="main">
+    <div class="preview-wrap">
+      <div class="preview-label">DFS FRONTEND · GHOST CONTROL</div>
+      <iframe id="dfs-frame" src="frontend.html"></iframe>
+      <div class="iframe-overlay">
+        <!-- ghost cursor -->
+        <div id="ghost-cursor">
+          <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 2L18 11L11 13L8 20L4 2Z" fill="#7c6cfa" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="ghost-ring" id="ghost-ring"></div>
+        <div id="step-tooltip"></div>
+      </div>
+    </div>
+
+    <!-- log -->
+    <div class="log-panel">
+      <div class="log-head2">
+        <span class="log-head2-title">Test Output</span>
+        <div class="log-actions">
+          <button class="log-clear2" onclick="clearLog()">clear</button>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="log-body" id="log-body"></div>
+      <div class="result-summary">
+        <div class="rs-badge rs-idle" id="result-badge">—</div>
+        <span class="rs-label" id="result-label">No test run yet</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── state ──────────────────────────────────────────────────────────────────
+let stepDelay = 900;
+let running = false;
+let stopFlag = false;
+let selectedScenario = null;
+let fw = null; // frame window
+
+// ── scenarios ──────────────────────────────────────────────────────────────
+const SCENARIOS = [
+  {
+    id: 'happy_path',
+    name: 'Happy Path',
+    desc: 'Write → Read → Delete on primary',
+    tag: 'normal', tagLabel: 'NORMAL',
+    steps: [
+      { action: 'click', target: '#tab-write',    label: 'Open Write tab' },
+      { action: 'type',  target: '#w-name',       value: 'test_happy.txt', label: 'Enter filename' },
+      { action: 'type',  target: '#w-content',    value: 'Hello from the fault tester! Primary write OK.', label: 'Enter content' },
+      { action: 'click', target: '#btn-write',    label: 'Submit write' },
+      { action: 'wait',  ms: 1400,                label: 'Awaiting server response…' },
+      { action: 'click', target: '#tab-read',     label: 'Switch to Read tab' },
+      { action: 'selectopt', target: '#r-name', value: 'test_happy.txt', label: 'Select file to read' },
+      { action: 'click', target: '#btn-read',     label: 'Submit read' },
+      { action: 'wait',  ms: 1200,                label: 'Awaiting read response…' },
+      { action: 'click', target: '#tab-delete',   label: 'Switch to Delete tab' },
+      { action: 'selectopt', target: '#d-name', value: 'test_happy.txt', label: 'Select file to delete' },
+      { action: 'click', target: '#btn-delete',   label: 'Submit delete' },
+      { action: 'wait',  ms: 1200,                label: 'Awaiting delete response…' },
+    ]
+  },
+  {
+    id: 'multi_write',
+    name: 'Multi-File Stress Write',
+    desc: 'Write 5 files rapidly to stress replication',
+    tag: 'perf', tagLabel: 'PERF',
+    steps: [
+      { action: 'click', target: '#tab-write', label: 'Open Write tab' },
+      ...['alpha.log','beta.log','gamma.log','delta.log','epsilon.log'].flatMap((fn, i) => [
+        { action: 'clear',  target: '#w-name',    label: `Clear filename field` },
+        { action: 'type',   target: '#w-name',    value: fn, label: `Filename: ${fn}` },
+        { action: 'clear',  target: '#w-content', label: 'Clear content field' },
+        { action: 'type',   target: '#w-content', value: `Stress write #${i+1} — data block ${Math.random().toString(36).slice(2)}`, label: `Fill content for ${fn}` },
+        { action: 'click',  target: '#btn-write', label: `Write ${fn}` },
+        { action: 'wait',   ms: 900,              label: 'Waiting for write ack…' },
+      ])
+    ]
+  },
+  {
+    id: 'read_missing',
+    name: 'Read Non-Existent File',
+    desc: 'Try to read a file that does not exist — expects error',
+    tag: 'fault', tagLabel: 'FAULT',
+    expect: 'error',
+    steps: [
+      { action: 'click',     target: '#tab-read',  label: 'Open Read tab' },
+      { action: 'wait',      ms: 600,              label: 'Tab switching…' },
+      { action: 'typeSelect', target: '#r-name', value: 'ghost_file_404.txt', label: 'Select ghost file (manual)' },
+      { action: 'click',     target: '#btn-read',  label: 'Attempt read — expect failure' },
+      { action: 'wait',      ms: 1400,             label: 'Watching for error response…' },
+    ]
+  },
+  {
+    id: 'delete_missing',
+    name: 'Delete Non-Existent File',
+    desc: 'Attempt delete on a file not on the server',
+    tag: 'fault', tagLabel: 'FAULT',
+    expect: 'error',
+    steps: [
+      { action: 'click',     target: '#tab-delete', label: 'Open Delete tab' },
+      { action: 'wait',      ms: 600,               label: 'Tab switching…' },
+      { action: 'typeSelect', target: '#d-name', value: 'phantom_delete.txt', label: 'Try phantom file' },
+      { action: 'click',     target: '#btn-delete', label: 'Attempt delete — expect failure' },
+      { action: 'wait',      ms: 1400,              label: 'Watching for error response…' },
+    ]
+  },
+  {
+    id: 'empty_write',
+    name: 'Empty Content Write',
+    desc: 'Write with blank content — should be rejected by frontend',
+    tag: 'fault', tagLabel: 'FAULT',
+    expect: 'warn',
+    steps: [
+      { action: 'click', target: '#tab-write',   label: 'Open Write tab' },
+      { action: 'clear', target: '#w-name',      label: 'Clear filename' },
+      { action: 'type',  target: '#w-name',      value: 'empty_test.txt', label: 'Enter filename' },
+      { action: 'clear', target: '#w-content',   label: 'Clear content (leave empty)' },
+      { action: 'click', target: '#btn-write',   label: 'Submit with empty content — expect warn' },
+      { action: 'wait',  ms: 800,                label: 'Check for validation warning…' },
+    ]
+  },
+  {
+    id: 'no_filename_write',
+    name: 'Missing Filename Write',
+    desc: 'Write without providing a filename',
+    tag: 'fault', tagLabel: 'FAULT',
+    expect: 'warn',
+    steps: [
+      { action: 'click', target: '#tab-write',   label: 'Open Write tab' },
+      { action: 'clear', target: '#w-name',      label: 'Leave filename blank' },
+      { action: 'clear', target: '#w-content',   label: 'Clear content' },
+      { action: 'type',  target: '#w-content',   value: 'Content with no filename set.', label: 'Enter content only' },
+      { action: 'click', target: '#btn-write',   label: 'Submit missing filename — expect warn' },
+      { action: 'wait',  ms: 800,                label: 'Check for validation error…' },
+    ]
+  },
+  {
+    id: 'write_read_verify',
+    name: 'Write → Read Verify',
+    desc: 'Write a file then immediately read it back to verify data integrity',
+    tag: 'normal', tagLabel: 'NORMAL',
+    steps: [
+      { action: 'click', target: '#tab-write',   label: 'Open Write tab' },
+      { action: 'clear', target: '#w-name',      label: 'Clear filename' },
+      { action: 'type',  target: '#w-name',      value: 'verify_test.dat', label: 'Set filename' },
+      { action: 'clear', target: '#w-content',   label: 'Clear content' },
+      { action: 'type',  target: '#w-content',   value: 'CHECKSUM:abc123 | payload: integrity test datum', label: 'Enter verifiable content' },
+      { action: 'click', target: '#btn-write',   label: 'Write file' },
+      { action: 'wait',  ms: 1300,               label: 'Waiting for write…' },
+      { action: 'click', target: '#tab-read',    label: 'Switch to Read tab' },
+      { action: 'selectopt', target: '#r-name', value: 'verify_test.dat', label: 'Select written file' },
+      { action: 'click', target: '#btn-read',    label: 'Read file back' },
+      { action: 'wait',  ms: 1300,               label: 'Checking read result…' },
+      { action: 'verify_read', value: 'CHECKSUM:abc123', label: 'Verify checksum in result' },
+    ]
+  },
+  {
+    id: 'chaos_burst',
+    name: 'Chaos Burst',
+    desc: 'Rapid mixed ops: writes, reads, deletes in quick succession',
+    tag: 'chaos', tagLabel: 'CHAOS',
+    steps: [
+      { action: 'click', target: '#tab-write', label: 'Write chaos_a' },
+      { action: 'clear', target: '#w-name' },
+      { action: 'type',  target: '#w-name', value: 'chaos_a.tmp', label: null },
+      { action: 'clear', target: '#w-content' },
+      { action: 'type',  target: '#w-content', value: 'chaos block A', label: null },
+      { action: 'click', target: '#btn-write', label: 'Submit write A' },
+      { action: 'wait',  ms: 600, label: null },
+      { action: 'click', target: '#tab-write', label: 'Write chaos_b' },
+      { action: 'clear', target: '#w-name' },
+      { action: 'type',  target: '#w-name', value: 'chaos_b.tmp', label: null },
+      { action: 'clear', target: '#w-content' },
+      { action: 'type',  target: '#w-content', value: 'chaos block B — rapid fire', label: null },
+      { action: 'click', target: '#btn-write', label: 'Submit write B' },
+      { action: 'wait',  ms: 500, label: null },
+      { action: 'click', target: '#tab-read', label: 'Read chaos_a immediately' },
+      { action: 'selectopt', target: '#r-name', value: 'chaos_a.tmp', label: null },
+      { action: 'click', target: '#btn-read', label: 'Submit read A (race check)' },
+      { action: 'wait',  ms: 500, label: null },
+      { action: 'click', target: '#tab-delete', label: 'Delete chaos_a mid-burst' },
+      { action: 'selectopt', target: '#d-name', value: 'chaos_a.tmp', label: null },
+      { action: 'click', target: '#btn-delete', label: 'Delete A while B in flight' },
+      { action: 'wait',  ms: 600, label: null },
+      { action: 'click', target: '#tab-read', label: 'Read after deletes' },
+      { action: 'selectopt', target: '#r-name', value: 'chaos_b.tmp', label: null },
+      { action: 'click', target: '#btn-read', label: 'Read B — check survivor' },
+      { action: 'wait',  ms: 800, label: null },
+    ]
+  },
+];
+
+// ── render sidebar ─────────────────────────────────────────────────────────
+function renderScenarios() {
+  const list = document.getElementById('scenarios-list');
+  list.innerHTML = SCENARIOS.map((s, i) => `
+    <div class="scenario-item" id="sc-${s.id}" onclick="selectScenario(${i})">
+      <div class="si-name">${s.name}</div>
+      <div class="si-desc">${s.desc}</div>
+      <span class="si-tag tag-${s.tag}">${s.tagLabel}</span>
+    </div>
+  `).join('');
+}
+
+function selectScenario(i) {
+  selectedScenario = i;
+  document.querySelectorAll('.scenario-item').forEach((el, j) => {
+    el.classList.toggle('selected', j === i);
+  });
+  log('sys', 't-sys', `Selected: <span class="acc">${SCENARIOS[i].name}</span>`);
+}
+
+// ── iframe access ──────────────────────────────────────────────────────────
+function getFrame() {
+  const frame = document.getElementById('dfs-frame');
+  try { return frame.contentWindow; } catch { return null; }
+}
+
+function loadFrame() {
+  const url = document.getElementById('frame-url').value.trim();
+  document.getElementById('dfs-frame').src = url;
+  log('sys', 't-sys', `Loading target: <span class="acc">${url}</span>`);
+}
+
+// ── ghost cursor ───────────────────────────────────────────────────────────
+const cursor = document.getElementById('ghost-cursor');
+const ring   = document.getElementById('ghost-ring');
+const tooltip = document.getElementById('step-tooltip');
+
+let curX = 100, curY = 100;
+
+function showCursor() { cursor.style.display = 'block'; }
+function hideCursor() { cursor.style.display = 'none'; tooltip.style.display = 'none'; }
+
+function showTooltip(text, x, y) {
+  if (!text) { tooltip.style.display = 'none'; return; }
+  tooltip.textContent = text;
+  tooltip.style.display = 'block';
+  // keep tooltip in bounds
+  const tw = 260, th = 40;
+  const pw = cursor.parentElement.offsetWidth;
+  const ph = cursor.parentElement.offsetHeight;
+  let tx = x + 30, ty = y - 16;
+  if (tx + tw > pw) tx = x - tw - 10;
+  if (ty + th > ph) ty = y - th - 4;
+  if (ty < 0) ty = y + 20;
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top  = ty + 'px';
+}
+
+function animateRing(x, y) {
+  ring.style.left = x + 'px';
+  ring.style.top  = y + 'px';
+  ring.className = 'ghost-ring';
+  void ring.offsetWidth;
+  ring.className = 'ghost-ring click-anim';
+}
+
+async function moveTo(x, y, label) {
+  const steps = 18;
+  const dx = (x - curX) / steps;
+  const dy = (y - curY) / steps;
+  for (let i = 0; i < steps; i++) {
+    if (stopFlag) return;
+    curX += dx; curY += dy;
+    cursor.style.left = curX + 'px';
+    cursor.style.top  = curY + 'px';
+    showTooltip(label, curX, curY);
+    await sleep(16);
+  }
+  curX = x; curY = y;
+  cursor.style.left = curX + 'px';
+  cursor.style.top  = curY + 'px';
+}
+
+// ── element locator (in iframe coords) ────────────────────────────────────
+function getElementCenter(selector) {
+  const fw = getFrame();
+  if (!fw) return null;
+  const el = fw.document.querySelector(selector);
+  if (!el) return null;
+  const frameRect = document.getElementById('dfs-frame').getBoundingClientRect();
+  const elRect    = el.getBoundingClientRect(); // in iframe coords
+  // iframe getBoundingClientRect is relative to iframe's own viewport
+  return {
+    x: frameRect.left + elRect.left + elRect.width  / 2,
+    y: frameRect.top  + elRect.top  + elRect.height / 2,
+    elRect,
+    el
+  };
+}
+
+// Convert page coords to overlay-relative coords
+function toOverlay(pageX, pageY) {
+  const wrap = document.querySelector('.preview-wrap');
+  const rect = wrap.getBoundingClientRect();
+  return { x: pageX - rect.left, y: pageY - rect.top };
+}
+
+// ── logging ────────────────────────────────────────────────────────────────
+function ts() { return new Date().toTimeString().slice(0,8); }
+
+function log(tag, cls, msg) {
+  const el = document.getElementById('log-body');
+  const d = document.createElement('div');
+  d.className = 'll';
+  d.innerHTML = `<span class="ll-t">${ts()}</span><span class="ll-tag ${cls}">${tag}</span><span class="ll-m">${msg}</span>`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('log-body').innerHTML = '';
+  log('sys', 't-sys', 'Log cleared');
+}
+
+// ── helpers ────────────────────────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function setProgress(pct) {
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function setStatus(state, label) {
+  const dot = document.getElementById('status-dot');
+  const lbl = document.getElementById('status-label');
+  dot.className = 'dot ' + state;
+  lbl.textContent = label;
+}
+
+function setResult(pass, msg) {
+  const badge = document.getElementById('result-badge');
+  const label = document.getElementById('result-label');
+  if (pass === null) {
+    badge.className = 'rs-badge rs-idle'; badge.textContent = '—';
+    label.textContent = 'No test run yet';
+  } else if (pass) {
+    badge.className = 'rs-badge rs-pass'; badge.textContent = 'PASS';
+    label.textContent = msg;
+  } else {
+    badge.className = 'rs-badge rs-fail'; badge.textContent = 'FAIL';
+    label.textContent = msg;
+  }
+}
+
+function setSpeed(btn) {
+  stepDelay = parseInt(btn.dataset.speed);
+  document.querySelectorAll('.sp-btn[data-speed]').forEach(b => b.classList.toggle('active', b === btn));
+}
+
+// ── iframe interaction helpers ─────────────────────────────────────────────
+function fwQuery(sel) {
+  const fw = getFrame();
+  if (!fw) return null;
+  return fw.document.querySelector(sel);
+}
+
+function fireEvent(el, type) {
+  el.dispatchEvent(new Event(type, { bubbles: true }));
+}
+
+function setNativeValue(el, value) {
+  // React-friendly value setter
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+    el.tagName === 'TEXTAREA'
+      ? (getFrame().HTMLTextAreaElement || window.HTMLTextAreaElement).prototype
+      : (getFrame().HTMLInputElement   || window.HTMLInputElement).prototype,
+    'value'
+  );
+  if (nativeInputValueSetter) nativeInputValueSetter.set.call(el, value);
+  else el.value = value;
+  fireEvent(el, 'input');
+  fireEvent(el, 'change');
+}
+
+// ── run a single step ──────────────────────────────────────────────────────
+async function execStep(step, stepIdx, totalSteps) {
+  if (stopFlag) return false;
+  setProgress((stepIdx / totalSteps) * 100);
+
+  if (step.label) {
+    log('step', 't-step', `Step ${stepIdx+1}/${totalSteps} · <span class="acc">${step.label}</span>`);
+  }
+
+  if (step.action === 'wait') {
+    await sleep(step.ms ?? stepDelay);
+    return true;
+  }
+
+  if (step.action === 'verify_read') {
+    // Check the read result box in the iframe
+    const box = fwQuery('#read-result');
+    if (box && box.textContent.includes(step.value)) {
+      log('ok', 't-ok', `Verify PASS — found <span class="hi">${step.value}</span> in read result`);
+      return true;
+    } else {
+      log('err', 't-err', `Verify FAIL — <span class="err">${step.value}</span> not found in read result`);
+      return false;
+    }
+  }
+
+  // Find element center
+  const info = getElementCenter(step.target);
+  if (!info) {
+    log('warn', 't-warn', `Element not found: <span class="err">${step.target}</span>`);
+    return true; // keep going
+  }
+
+  const ov = toOverlay(info.x, info.y);
+  await moveTo(ov.x, ov.y, step.label || null);
+  await sleep(Math.round(stepDelay * 0.3));
+
+  if (step.action === 'click') {
+    animateRing(curX, curY);
+    info.el.click();
+    await sleep(Math.round(stepDelay * 0.5));
+  }
+
+  else if (step.action === 'clear') {
+    info.el.focus?.();
+    setNativeValue(info.el, '');
+    await sleep(100);
+  }
+
+  else if (step.action === 'type') {
+    info.el.focus?.();
+    // simulate typing char by char
+    let current = info.el.value || '';
+    for (const ch of step.value) {
+      if (stopFlag) return false;
+      current += ch;
+      setNativeValue(info.el, current);
+      await sleep(Math.max(18, Math.round(stepDelay * 0.03)));
+    }
+    await sleep(200);
+  }
+
+  else if (step.action === 'selectopt') {
+    // Try to find matching option
+    const sel = info.el;
+    let found = false;
+    for (const opt of sel.options) {
+      if (opt.value === step.value) { sel.value = step.value; found = true; break; }
+    }
+    if (!found) {
+      // inject option (for ghost files that don't exist in the list)
+      const opt = document.createElement('option');
+      opt.value = step.value; opt.textContent = step.value;
+      sel.appendChild(opt);
+      sel.value = step.value;
+    }
+    sel.classList.remove('empty');
+    fireEvent(sel, 'change');
+    await sleep(200);
+  }
+
+  else if (step.action === 'typeSelect') {
+    // For selects, inject option then trigger change
+    const sel = info.el;
+    const opt = document.createElement('option');
+    opt.value = step.value; opt.textContent = step.value;
+    sel.appendChild(opt);
+    sel.value = step.value;
+    sel.classList.remove('empty');
+    fireEvent(sel, 'change');
+    await sleep(200);
+  }
+
+  return true;
+}
+
+// ── main runner ────────────────────────────────────────────────────────────
+async function runSelected() {
+  if (running) return;
+  if (selectedScenario === null) {
+    log('warn', 't-warn', 'Select a scenario first');
+    return;
+  }
+
+  const fw = getFrame();
+  if (!fw || !fw.document.body) {
+    log('err', 't-err', 'Frontend not loaded — set target URL above and hit load');
+    return;
+  }
+
+  const sc = SCENARIOS[selectedScenario];
+  running = true;
+  stopFlag = false;
+  document.getElementById('btn-run').disabled  = true;
+  document.getElementById('btn-stop').disabled = false;
+  setStatus('live', 'running');
+  setResult(null, '');
+  showCursor();
+
+  // highlight sidebar item
+  document.querySelectorAll('.scenario-item').forEach((el, j) => {
+    el.classList.toggle('running', j === selectedScenario);
+  });
+
+  log('sys', 't-sys', `━━ Starting: <span class="acc">${sc.name}</span> ━━`);
+  log('info', 't-info', `${sc.steps.filter(s=>s.label).length} labelled steps · target: ${sc.tag}`);
+
+  const steps = sc.steps;
+  let allOk = true;
+  const t0 = Date.now();
+
+  for (let i = 0; i < steps.length; i++) {
+    if (stopFlag) {
+      log('warn', 't-warn', 'Test stopped by user');
+      allOk = false;
+      break;
+    }
+    const ok = await execStep(steps[i], i, steps.length);
+    if (!ok) { allOk = false; }
+    await sleep(Math.round(stepDelay * 0.2));
+  }
+
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+  setProgress(100);
+  await sleep(400);
+  setProgress(0);
+
+  hideCursor();
+  running = false;
+  stopFlag = false;
+  document.getElementById('btn-run').disabled  = false;
+  document.getElementById('btn-stop').disabled = true;
+  setStatus('', 'idle');
+
+  document.querySelectorAll('.scenario-item').forEach(el => el.classList.remove('running'));
+
+  if (allOk) {
+    log('ok', 't-ok', `━━ COMPLETED in ${elapsed}s ━━`);
+    setResult(true, `${sc.name} completed in ${elapsed}s`);
+  } else {
+    log('err', 't-err', `━━ FAILED or stopped after ${elapsed}s ━━`);
+    setResult(false, `${sc.name} failed or stopped`);
+  }
+}
+
+function stopTest() {
+  stopFlag = true;
+  setStatus('paused', 'stopping…');
+  log('warn', 't-warn', 'Stop requested…');
+}
+
+// ── boot ───────────────────────────────────────────────────────────────────
+renderScenarios();
+log('sys', 't-sys', 'Fault tester ready · select a scenario and hit Run');
+log('info', 't-info', `${SCENARIOS.length} scenarios loaded`);
+
+// Init cursor position to center of preview
+const wrap = document.querySelector('.preview-wrap');
+curX = wrap.offsetWidth  / 2;
+curY = wrap.offsetHeight / 2;
+</script>
+</body>
+</html>

@@ -119,6 +119,7 @@ def fs_write(filename: str, data: str) -> tuple:
     if path is None:
         return False, "Invalid filename"
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    print("[DEBUG WRITE] Writing file to:", path)
     with open(path, "w", encoding="utf-8") as f:
         f.write(data)
     return True, None
@@ -138,25 +139,35 @@ def fs_delete(filename: str) -> tuple:
     return True, None
 
 
-def fs_list() -> tuple:
-    """
-    List files in the DFS.
-    Returns (list_of_files, None) or (None, error).
-    """
+def fs_list():
     try:
+        print("\n[DEBUG] ===== LIST CALLED =====")
+        print("[DEBUG] DIR:", FILE_STORE_DIR)
+
+        if not os.path.exists(FILE_STORE_DIR):
+            print("[DEBUG] Directory does NOT exist")
+            return [], None
+
+        raw_files = os.listdir(FILE_STORE_DIR)
+        print("[DEBUG] RAW FILES:", raw_files)
+
         files = []
-        if os.path.exists(FILE_STORE_DIR):
-            for fname in os.listdir(FILE_STORE_DIR):
-                path = os.path.join(FILE_STORE_DIR, fname)
-                if os.path.isfile(path):
-                    stats = os.stat(path)
-                    files.append({
-                        "name": fname,
-                        "size": stats.st_size,
-                        "modified": stats.st_mtime
-                    })
+        for fname in raw_files:
+            path = os.path.join(FILE_STORE_DIR, fname)
+
+            if os.path.isfile(path):
+                stats = os.stat(path)
+                files.append({
+                    "name": fname,
+                    "size": stats.st_size,
+                    "modified": stats.st_mtime
+                })
+
+        print("[DEBUG] FINAL FILE LIST:", files)
         return files, None
+
     except Exception as e:
+        print("[DEBUG ERROR]:", e)
         return None, str(e)
 
 

@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DFS Client</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #f7f6f3;
+    --card:     #ffffff;
+    --card2:    #f0efe9;
+    --ink:      #1a1917;
+    --ink2:     #6b6860;
+    --ink3:     #a8a59e;
+    --line:     #e3e1da;
+    --lime:     #b5e550;
+    --lime-d:   #7aab00;
+    --teal:     #00c9a7;
+    --red:      #ff4444;
+    --blue:     #3b82f6;
+    --mono:     'DM Mono', monospace;
+    --sans:     'DM Sans', sans-serif;
+    --radius:   14px;
+    --cursor-size: 28px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* ── top bar ── */
+  .topbar {
+    width: 100%; max-width: 1060px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    position: relative; z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-icon svg { width: 17px; height: 17px; fill: var(--lime); }
+  .brand-name { font-size: 15px; font-weight: 500; letter-spacing: -0.02em; }
+  .brand-sub  { font-size: 11px; color: var(--ink3); font-family: var(--mono); margin-top: 1px; }
+
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .bridge-url {
+    font-family: var(--mono); font-size: 11px; color: var(--ink2);
+    background: var(--card2); border: 1px solid var(--line);
+    border-radius: 8px; padding: 5px 10px;
+  }
+  .bridge-url input {
+    background: none; border: none; outline: none;
+    font-family: var(--mono); font-size: 11px; color: var(--ink);
+    width: 200px;
+  }
+  .conn-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--card2); border: 1px solid var(--line);
+    border-radius: 999px; padding: 5px 14px 5px 8px;
+    font-size: 11px; font-family: var(--mono); color: var(--ink2);
+  }
+  .conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lime-d); flex-shrink: 0; transition: background 0.3s; }
+  .conn-dot.offline { background: var(--red); }
+  .conn-dot.replica { background: var(--blue); }
+
+  /* ── Dropdown Wrapper ── */
+  .sim-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  /* Simulation Button */
+  .btn-sim {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--ink);
+    color: var(--lime);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-sim:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
+  .btn-sim:active { transform: translateY(1px); }
+  .btn-sim.running { opacity: 0.6; pointer-events: none; }
+  
+  .caret {
+    width: 0; 
+    height: 0; 
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid var(--lime);
+    opacity: 0.8;
+    transition: transform 0.2s;
+  }
+  .btn-sim:hover .caret { transform: translateY(1px); }
+
+  /* Dropdown Menu */
+  .sim-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    width: 140px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 4px;
+    display: none;
+    z-index: 100;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .sim-menu.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .sim-item {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--ink);
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    border: none;
+    background: none;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sim-item:hover { background: var(--card2); color: var(--ink2); }
+  .sim-item svg { width: 12px; height: 12px; opacity: 0.6; }
+
+  /* ── main grid ── */
+  .main { width: 100%; max-width: 1060px; display: grid; grid-template-columns: 1fr 280px; gap: 16px; position: relative; z-index: 5;}
+
+  /* ── left panel ── */
+  .left { display: flex; flex-direction: column; gap: 16px; }
+
+  .op-tabs { display: flex; gap: 6px; }
+  .op-tab {
+    flex: 1; padding: 11px 8px; border-radius: 12px;
+    border: 1px solid var(--line); background: var(--card);
+    cursor: pointer; font-family: var(--sans); font-size: 13px;
+    color: var(--ink2); font-weight: 400; text-align: center;
+    transition: all 0.14s;
+    position: relative; overflow: hidden;
+  }
+  .op-tab:hover { background: var(--card2); color: var(--ink); }
+  .op-tab.active { background: var(--ink); color: var(--lime); border-color: var(--ink); font-weight: 500; }
+  
+  .op-tab.sim-hover { background: var(--card2); color: var(--ink); }
+
+  .form-card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 22px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid.single { grid-template-columns: 1fr; }
+
+  label.lbl {
+    display: block; font-size: 10px; font-weight: 500;
+    color: var(--ink3); text-transform: uppercase; letter-spacing: 0.09em;
+    margin-bottom: 6px;
+  }
+  input.fi, textarea.fi {
+    width: 100%; padding: 10px 13px;
+    background: var(--card2); border: 1px solid var(--line);
+    border-radius: 10px; font-family: var(--mono); font-size: 13px;
+    color: var(--ink); outline: none; transition: border-color 0.14s;
+  }
+  input.fi:focus, textarea.fi:focus { border-color: var(--ink2); }
+  input.fi.sim-focus, textarea.fi.sim-focus { border-color: var(--ink2); background: var(--card); }
+  
+  textarea.fi { height: 90px; resize: none; line-height: 1.55; }
+  select.fi {
+    width: 100%; padding: 10px 13px;
+    background: var(--card2); border: 1px solid var(--line);
+    border-radius: 10px; font-family: var(--mono); font-size: 13px;
+    color: var(--ink); outline: none; transition: border-color 0.14s;
+    appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23a8a59e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  select.fi:focus { border-color: var(--ink2); }
+  select.fi.empty { color: var(--ink3); }
+
+  .run-btn {
+    margin-top: 16px; width: 100%; padding: 13px;
+    border-radius: 10px; border: none; cursor: pointer;
+    font-family: var(--sans); font-size: 14px; font-weight: 500;
+    letter-spacing: -0.01em; transition: all 0.14s;
+    position: relative; overflow: hidden;
+  }
+  .run-btn:active { transform: scale(0.985); }
+  .btn-write  { background: var(--ink); color: var(--lime); }
+  .btn-write:hover  { background: #2a2926; }
+  .btn-read   { background: var(--card2); color: var(--ink); border: 1px solid var(--line); }
+  .btn-read:hover   { background: var(--line); }
+  .btn-delete { background: #fff0f0; color: var(--red); border: 1px solid #ffd0d0; }
+  .btn-delete:hover { background: #ffe4e4; }
+  .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .run-btn.sim-hover { filter: brightness(0.95); }
+
+  .result-box {
+    margin-top: 14px; background: var(--ink); border-radius: 10px;
+    padding: 14px 15px; font-family: var(--mono); font-size: 12px;
+    color: #c8c5be; line-height: 1.65; word-break: break-all;
+    min-height: 52px; white-space: pre-wrap; display: none;
+  }
+
+  .warn-box {
+    margin-top: 14px; padding: 11px 14px;
+    background: #fff0f0; border-radius: 10px;
+    font-size: 12px; color: #cc4444; border: 1px solid #ffd0d0;
+    line-height: 1.5;
+  }
+
+  /* ── log ── */
+  .log-wrap { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .log-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+  }
+  .log-head-title { font-size: 12px; font-weight: 500; color: var(--ink2); }
+  .log-clear { font-size: 11px; color: var(--ink3); cursor: pointer; font-family: var(--mono); background: none; border: none; padding: 0; }
+  .log-clear:hover { color: var(--ink2); }
+  .log-stream {
+    background: var(--ink); padding: 14px 16px;
+    min-height: 160px; max-height: 240px; overflow-y: auto;
+    font-family: var(--mono); font-size: 11px; line-height: 1.85;
+  }
+  .log-stream::-webkit-scrollbar { width: 3px; }
+  .log-stream::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+  .le { display: flex; gap: 8px; align-items: baseline; animation: fadein 0.18s ease; }
+  @keyframes fadein { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+  .le-t  { color: #555; flex-shrink: 0; min-width: 52px; }
+  .le-tag {
+    font-size: 9px; font-weight: 500; letter-spacing: 0.08em;
+    padding: 1px 5px; border-radius: 4px; flex-shrink: 0;
+  }
+  .tag-ok   { background: #1a3a1a; color: var(--lime); }
+  .tag-err  { background: #3a1a1a; color: #ff8888; }
+  .tag-info { background: #1a2a3a; color: #7ab8ff; }
+  .tag-sys  { background: #2a2a28; color: #888; }
+  .tag-warn { background: #3a2e1a; color: #ffbb55; }
+  .le-m { color: #c8c5be; }
+  .le-m .hi  { color: var(--lime); }
+  .le-m .hi2 { color: #7ab8ff; }
+  .le-m .dim { color: #555; }
+
+  /* ── right panel ── */
+  .right { display: flex; flex-direction: column; gap: 16px; }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 18px 20px;
+  }
+  .panel-title {
+    font-size: 10px; font-weight: 500; color: var(--ink3);
+    text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 12px;
+  }
+
+  /* server cards */
+  .server-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 13px; border-radius: 11px;
+    border: 1px solid var(--line); background: var(--card2);
+    margin-bottom: 8px; transition: all 0.2s;
+  }
+  .server-card:last-child { margin-bottom: 0; }
+  .server-card.active { background: var(--ink); border-color: var(--ink); }
+  .sc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transition: background 0.3s; }
+  .sc-body { flex: 1; }
+  .sc-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .server-card.active .sc-name { color: var(--lime); }
+  .sc-addr { font-size: 10px; font-family: var(--mono); color: var(--ink3); margin-top: 1px; }
+  .server-card.active .sc-addr { color: #666; }
+  .sc-badge {
+    font-size: 9px; font-family: var(--mono); color: var(--ink3);
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 5px; padding: 2px 7px;
+  }
+  .server-card.active .sc-badge { background: #2a2a28; border-color: #333; color: var(--lime-d); }
+
+  /* stats */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { background: var(--card2); border-radius: 10px; padding: 12px 14px; }
+  .stat-n { font-size: 22px; font-weight: 500; color: var(--ink); line-height: 1; margin-bottom: 3px; }
+  .stat-l { font-size: 10px; color: var(--ink3); font-family: var(--mono); }
+
+  /* file list */
+  .file-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 8px 10px; border-radius: 9px; cursor: pointer;
+    transition: background 0.12s;
+  }
+  .file-item:hover { background: var(--card2); }
+  .file-item.sim-hover { background: var(--card2); }
+  .fi-ico {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--card2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .fi-ico svg { width: 12px; height: 12px; }
+  .fi-name { font-size: 12px; font-family: var(--mono); color: var(--ink); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fi-size { font-size: 10px; font-family: var(--mono); color: var(--ink3); }
+  .empty-files { font-size: 12px; color: var(--ink3); font-family: var(--mono); text-align: center; padding: 18px 0; }
+
+  @media (max-width: 720px) {
+    .main { grid-template-columns: 1fr; }
+    .right { order: -1; }
+    .topbar { flex-direction: column; gap: 12px; align-items: flex-start; }
+  }
+
+  /* ── Ghost Cursor Styles ── */
+  #ghost-cursor {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--cursor-size); height: var(--cursor-size);
+    pointer-events: none;
+    z-index: 99999;
+    will-change: transform;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a1917'%3E%3Cpath d='M5.5 2.25a.75.75 0 00-1.16.63l.005 17.85a.75.75 0 001.32.49l4.774-5.592a.75.75 0 01.57-.264h7.356a.75.75 0 00.496-1.31L6.37 2.54a.75.75 0 00-.87-.29z'/%3E%3Cpath d='M6 3v17l4.5-5.25h7.5L6 3z' fill='white' fill-opacity='0.4'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+    transform: translate3d(0,0,0);
+    display: none;
+  }
+  #ghost-cursor.active { display: block; }
+  
+  .click-ripple {
+    position: absolute;
+    width: 20px; height: 20px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ripple 0.3s ease-out forwards;
+    pointer-events: none;
+    z-index: 99998;
+    opacity: 0.6;
+  }
+  @keyframes ripple {
+    0% { width: 0; height: 0; opacity: 0.8; }
+    100% { width: 40px; height: 40px; opacity: 0; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- Ghost Cursor -->
+<div id="ghost-cursor"></div>
+
+<!-- top bar -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 16 16"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z" opacity=".35"/><path d="M3.5 3.5h2v2h-2zM10.5 3.5h2v2h-2zM3.5 10.5h2v2h-2zM10.5 10.5h2v2h-2z"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">Distributed File System</div>
+      <div class="brand-sub">client · passive replication</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="bridge-url">
+      <span style="color:var(--ink3)">bridge →</span>
+      <input type="text" id="bridge-input" value="http://127.0.0.1:5000" />
+    </div>
+    <div class="conn-pill">
+      <div class="conn-dot" id="conn-dot"></div>
+      <span id="conn-label">checking...</span>
+    </div>
+    
+    <!-- Simulation Dropdown -->
+    <div class="sim-dropdown" id="sim-dropdown">
+      <button class="btn-sim" id="btn-sim-main" onclick="toggleSimMenu()">
+        <span>Run Demo</span>
+        <div class="caret"></div>
+      </button>
+      <div class="sim-menu" id="sim-menu">
+        <button class="sim-item" onclick="startSim('all')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          Run All
+        </button>
+        <button class="sim-item" onclick="startSim('write')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Write Only
+        </button>
+        <button class="sim-item" onclick="startSim('read')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Read Only
+        </button>
+        <button class="sim-item" onclick="startSim('delete')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Delete Only
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- main -->
+<div class="main">
+  <div class="left">
+
+    <!-- tabs -->
+    <div class="op-tabs">
+      <button class="op-tab active" id="tab-write" onclick="setOp('write')">Write</button>
+      <button class="op-tab"        id="tab-read"  onclick="setOp('read')">Read</button>
+      <button class="op-tab"        id="tab-delete" onclick="setOp('delete')">Delete</button>
+    </div>
+
+    <!-- write form -->
+    <div class="form-card" id="form-write">
+      <div class="form-grid">
+        <div>
+          <label class="lbl">Filename</label>
+          <input class="fi" type="text" id="w-name" placeholder="notes.txt" />
+        </div>
+        <div>
+          <label class="lbl">Encoding</label>
+          <input class="fi" type="text" value="UTF-8" disabled style="opacity:.45" />
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <label class="lbl">Content</label>
+        <textarea class="fi" id="w-content" placeholder="Enter file content here..."></textarea>
+      </div>
+      <button class="run-btn btn-write" id="btn-write" onclick="doWrite()">Write file →</button>
+    </div>
+
+    <!-- read form -->
+    <div class="form-card" id="form-read" style="display:none">
+      <div class="form-grid single">
+        <div>
+          <label class="lbl">Choose file</label>
+          <select class="fi empty" id="r-name">
+            <option value="">— select a file —</option>
+          </select>
+        </div>
+      </div>
+      <div class="result-box" id="read-result"></div>
+      <button class="run-btn btn-read" id="btn-read" onclick="doRead()">Read file →</button>
+    </div>
+
+    <!-- delete form -->
+    <div class="form-card" id="form-delete" style="display:none">
+      <div class="form-grid single">
+        <div>
+          <label class="lbl">Choose file</label>
+          <select class="fi empty" id="d-name">
+            <option value="">— select a file —</option>
+          </select>
+        </div>
+      </div>
+      <div class="warn-box">This operation propagates to all replicas and cannot be undone.</div>
+      <button class="run-btn btn-delete" id="btn-delete" onclick="doDelete()">Delete file →</button>
+    </div>
+
+    <!-- log -->
+    <div class="log-wrap">
+      <div class="log-head">
+        <span class="log-head-title">Activity log</span>
+        <button class="log-clear" onclick="clearLog()">clear</button>
+      </div>
+      <div class="log-stream" id="log"></div>
+    </div>
+
+  </div>
+
+  <!-- right sidebar -->
+  <div class="right">
+
+    <div class="panel">
+      <div class="panel-title">Servers</div>
+      <div class="server-card" id="sc-primary">
+        <div class="sc-dot" id="dot-primary" style="background:var(--ink3)"></div>
+        <div class="sc-body">
+          <div class="sc-name">Primary</div>
+          <div class="sc-addr">127.0.0.1:9000</div>
+        </div>
+        <div class="sc-badge" id="badge-primary">—</div>
+      </div>
+      <div class="server-card" id="sc-replica">
+        <div class="sc-dot" id="dot-replica" style="background:var(--ink3)"></div>
+        <div class="sc-body">
+          <div class="sc-name" style="color:var(--ink)">Replica</div>
+          <div class="sc-addr">127.0.0.1:9001</div>
+        </div>
+        <div class="sc-badge" id="badge-replica">—</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Metrics</div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-n" id="s-files">0</div><div class="stat-l">files</div></div>
+        <div class="stat"><div class="stat-n" id="s-ops">0</div><div class="stat-l">operations</div></div>
+        <div class="stat"><div class="stat-n" id="s-bytes">0</div><div class="stat-l">bytes written</div></div>
+        <div class="stat"><div class="stat-n" id="s-latency" style="font-size:15px">—</div><div class="stat-l">last latency</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">File index <span id="fcount" style="color:var(--ink3)">(0)</span></div>
+      <div id="file-panel"><div class="empty-files">no files yet</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── state ──────────────────────────────────────────────────────────────────
+  let ops = 0, totalBytes = 0, files = {}, fileMeta = {};
+  let activeServer = 'primary';
+
+  function bridgeUrl() {
+    const el = document.getElementById('bridge-input');
+    return el ? el.value.replace(/\/$/, '') : 'http://127.0.0.1:5000';
+  }
+
+  // ── logging ────────────────────────────────────────────────────────────────
+  function ts() { return new Date().toTimeString().slice(0, 8); }
+
+  function log(tag, cls, msg) {
+    const el = document.getElementById('log');
+    const d = document.createElement('div');
+    d.className = 'le';
+    d.innerHTML = `<span class="le-t">${ts()}</span><span class="le-tag ${cls}">${tag}</span><span class="le-m">${msg}</span>`;
+    el.appendChild(d);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function clearLog() { document.getElementById('log').innerHTML = ''; log('sys','tag-sys','Log cleared'); }
+
+  // ── tab switching ──────────────────────────────────────────────────────────
+  function setOp(op) {
+    ['write','read','delete'].forEach(o => {
+      document.getElementById('tab-' + o).classList.toggle('active', o === op);
+      document.getElementById('form-' + o).style.display = o === op ? 'block' : 'none';
+    });
+  }
+
+  // ── server status UI ───────────────────────────────────────────────────────
+  function setServerStatus(primary, replica) {
+    const colors = { ok: 'var(--lime-d)', offline: 'var(--red)', unknown: 'var(--ink3)' };
+    const labels = { ok: 'online', offline: 'offline', unknown: '—' };
+
+    document.getElementById('dot-primary').style.background = colors[primary] || colors.unknown;
+    document.getElementById('badge-primary').textContent    = labels[primary]  || '—';
+    document.getElementById('dot-replica').style.background = colors[replica]  || colors.unknown;
+    document.getElementById('badge-replica').textContent    = labels[replica]  || '—';
+
+    const usingReplica = primary === 'offline' && replica === 'ok';
+    document.getElementById('sc-primary').classList.toggle('active', !usingReplica && primary === 'ok');
+    document.getElementById('sc-replica').classList.toggle('active', usingReplica);
+
+    const dot   = document.getElementById('conn-dot');
+    const label = document.getElementById('conn-label');
+    if (primary === 'ok') {
+      dot.className = 'conn-dot'; label.textContent = 'PRIMARY :9000';
+      activeServer = 'primary';
+    } else if (replica === 'ok') {
+      dot.className = 'conn-dot replica'; label.textContent = 'REPLICA :9001';
+      activeServer = 'replica';
+    } else {
+      dot.className = 'conn-dot offline'; label.textContent = 'offline';
+      activeServer = 'offline';
+    }
+  }
+
+  // ── heartbeat ──────────────────────────────────────────────────────────────
+  async function heartbeat(silent = false) {
+    try {
+      const r = await fetch(bridgeUrl() + '/heartbeat');
+      const d = await r.json();
+      const prev = activeServer;
+      setServerStatus(d.primary, d.replica);
+      if (!silent) {
+        const srv = activeServer === 'primary' ? 'PRIMARY' : activeServer === 'replica' ? 'REPLICA' : 'none';
+        log('hb', 'tag-sys', `Heartbeat → primary <span class="hi">${d.primary}</span> · replica <span class="hi2">${d.replica}</span>`);
+        if (prev !== activeServer && prev !== 'checking') {
+          log('sys', 'tag-warn', `Failover detected — now on <span class="hi">${srv}</span>`);
+        }
+      }
+    } catch {
+      setServerStatus('offline', 'offline');
+    }
+  }
+
+  // ── stats & file panel ─────────────────────────────────────────────────────
+  function updateStats() {
+    document.getElementById('s-files').textContent  = Object.keys(files).length;
+    document.getElementById('s-ops').textContent    = ops;
+    const b = Object.values(fileMeta).reduce((s, m) => s + (m.size || 0), 0) || totalBytes;
+    document.getElementById('s-bytes').textContent  = b > 9999 ? Math.round(b/1000) + 'k' : b;
+    document.getElementById('fcount').textContent   = '(' + Object.keys(files).length + ')';
+  }
+
+  async function loadFileList() {
+    try {
+      const r = await fetch(bridgeUrl() + '/list');
+      const d = await r.json();
+      if (d.status === 'OK' && Array.isArray(d.data)) {
+        const seen = new Set();
+        d.data.forEach(f => {
+          seen.add(f.name);
+          if (!(f.name in files)) files[f.name] = null;
+          if (!fileMeta[f.name]) fileMeta[f.name] = f;
+        });
+        Object.keys(files).forEach(n => { if (!seen.has(n)) delete files[n]; });
+        updateStats();
+        updateFilePanel();
+      }
+    } catch { /* bridge not ready yet */ }
+  }
+
+  function updateFilePanel() {
+    const panel = document.getElementById('file-panel');
+    const names = Object.keys(files);
+    if (!names.length) { panel.innerHTML = '<div class="empty-files">no files yet</div>'; return; }
+    panel.innerHTML = names.map(n => {
+      const meta = fileMeta[n];
+      const size = meta ? formatSize(meta.size) : (files[n] ? files[n].length + 'b' : '?');
+      return `
+        <div class="file-item" id="file-item-${n}" onclick="quickRead('${n}')">
+          <div class="fi-ico">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
+              <path d="M1 1h7l3 3v7H1z" stroke-linejoin="round"/>
+              <path d="M7 1v3h3"/>
+            </svg>
+          </div>
+          <span class="fi-name">${n}</span>
+          <span class="fi-size">${size}</span>
+        </div>`;
+    }).join('');
+    updateDropdowns();
+  }
+
+  function formatSize(bytes) {
+    if (bytes >= 1024) return Math.round(bytes / 1024) + 'kb';
+    return bytes + 'b';
+  }
+
+  function updateDropdowns() {
+    const names = Object.keys(files);
+    ['r-name','d-name'].forEach(id => {
+      const sel = document.getElementById(id);
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— select a file —</option>' +
+        names.map(n => `<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+      sel.classList.toggle('empty', !sel.value);
+    });
+  }
+
+  function quickRead(name) {
+    setOp('read');
+    const sel = document.getElementById('r-name');
+    sel.value = name;
+    sel.classList.remove('empty');
+    doRead();
+  }
+
+  function setLatency(ms) {
+    document.getElementById('s-latency').textContent = ms + 'ms';
+  }
+
+  // ── API calls ──────────────────────────────────────────────────────────────
+  async function apiFetch(path, body) {
+    const t0 = Date.now();
+    const r = await fetch(bridgeUrl() + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    setLatency(Date.now() - t0);
+    return r.json();
+  }
+
+  async function doWrite() {
+    const name    = document.getElementById('w-name').value.trim();
+    const content = document.getElementById('w-content').value;
+    if (!name)    { log('warn','tag-warn','Filename is required'); return; }
+    if (!content) { log('warn','tag-warn','Content cannot be empty'); return; }
+
+    const btn = document.getElementById('btn-write');
+    btn.disabled = true; btn.textContent = 'Writing...';
+    ops++;
+    log('→','tag-sys',`WRITE <span class="hi">${name}</span> <span class="dim">(${content.length} bytes)</span>`);
+
+    try {
+      const d = await apiFetch('/write', { filename: name, data: content });
+      if (d.status === 'OK') {
+        files[name] = content;
+        totalBytes += content.length;
+        fileMeta[name] = { name, size: content.length, modified: Date.now()/1000 };
+        log('ok','tag-ok',`Wrote <span class="hi">${name}</span> successfully` + (d.failover ? ' <span class="dim">via replica</span>' : ''));
+        log('syn','tag-info','Propagated to replica');
+        document.getElementById('w-content').value = '';
+        updateStats(); updateFilePanel();
+      } else {
+        log('err','tag-err', d.message || 'Write failed');
+      }
+    } catch(e) {
+      log('err','tag-err','Bridge error: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Write file →';
+    }
+  }
+
+  async function doRead() {
+    const sel = document.getElementById('r-name');
+    const name = sel.value;
+    if (!name) { log('warn','tag-warn','Please select a file'); return; }
+
+    const btn = document.getElementById('btn-read');
+    btn.disabled = true; btn.textContent = 'Reading...';
+    ops++;
+    log('→','tag-sys',`READ <span class="hi">${name}</span>`);
+
+    try {
+      const d = await apiFetch('/read', { filename: name });
+      const box = document.getElementById('read-result');
+      if (d.status === 'OK') {
+        box.style.display = 'block';
+        box.textContent = d.data;
+        files[name] = d.data;
+        log('ok','tag-ok',`Read <span class="hi">${name}</span>` + (d.failover ? ' <span class="dim">via replica</span>' : ''));
+        updateStats(); updateFilePanel();
+      } else {
+        box.style.display = 'none';
+        log('err','tag-err', d.message || 'File not found');
+      }
+    } catch(e) {
+      log('err','tag-err','Bridge error: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Read file →';
+    }
+  }
+
+  async function doDelete() {
+    const sel = document.getElementById('d-name');
+    const name = sel.value;
+    if (!name) { log('warn','tag-warn','Please select a file'); return; }
+
+    const btn = document.getElementById('btn-delete');
+    btn.disabled = true; btn.textContent = 'Deleting...';
+    ops++;
+    log('→','tag-sys',`DELETE <span class="hi">${name}</span>`);
+
+    try {
+      const d = await apiFetch('/delete', { filename: name });
+      if (d.status === 'OK') {
+        if (files[name] !== undefined) { totalBytes -= (fileMeta[name]?.size || 0); delete files[name]; delete fileMeta[name]; }
+        log('ok','tag-ok',`Deleted <span class="hi">${name}</span>` + (d.failover ? ' <span class="dim">via replica</span>' : ''));
+        log('syn','tag-info','DELETE propagated to replica');
+        sel.value = '';
+        sel.classList.add('empty');
+        updateStats(); updateFilePanel();
+      } else {
+        log('err','tag-err', d.message || 'Delete failed');
+      }
+    } catch(e) {
+      log('err','tag-err','Bridge error: ' + e.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Delete file →';
+    }
+  }
+
+  // ── Dropdown UI Logic ─────────────────────────────────────────────────────
+  const simMenu = document.getElementById('sim-menu');
+  const simBtnText = document.querySelector('#btn-sim-main span');
+
+  function toggleSimMenu() {
+    if (isSimulating) return;
+    simMenu.classList.toggle('show');
+  }
+
+  // Close dropdown when clicking outside
+  window.addEventListener('click', (e) => {
+    if (!document.getElementById('sim-dropdown').contains(e.target)) {
+      simMenu.classList.remove('show');
+    }
+  });
+
+  async function startSim(mode) {
+    simMenu.classList.remove('show');
+    if (isSimulating) return;
+    
+    // Update button text to reflect mode
+    if (mode === 'all') simBtnText.textContent = 'Run Demo';
+    if (mode === 'write') simBtnText.textContent = 'Write Demo';
+    if (mode === 'read') simBtnText.textContent = 'Read Demo';
+    if (mode === 'delete') simBtnText.textContent = 'Delete Demo';
+
+    runSimulation(mode).then(() => {
+      // Reset text after sim
+      setTimeout(() => { simBtnText.textContent = 'Run Demo'; }, 1000);
+    });
+  }
+
+  // ── Simulation & Ghost Cursor ───────────────────────────────────────────────
+  let isSimulating = false;
+  const cursor = document.getElementById('ghost-cursor');
+  const cursorSize = 28;
+  let targetX = 0, targetY = 0;
+  let curX = 0, curY = 0;
+  let animFrame;
+
+  function lerp(start, end, t) { return start * (1 - t) + end * t; }
+
+  function updateCursor() {
+    curX = lerp(curX, targetX, 0.15);
+    curY = lerp(curY, targetY, 0.15);
+    const offsetX = 2; 
+    const offsetY = 2;
+    cursor.style.transform = `translate3d(${curX + offsetX}px, ${curY + offsetY}px, 0)`;
+    if (isSimulating) handleHover();
+    if (isSimulating || Math.abs(curX - targetX) > 0.5 || Math.abs(curY - targetY) > 0.5) {
+      animFrame = requestAnimationFrame(updateCursor);
+    }
+  }
+
+  function moveCursorTo(el) {
+    const rect = el.getBoundingClientRect();
+    targetX = rect.left + rect.width / 2 - cursorSize / 2;
+    targetY = rect.top + rect.height / 2 - cursorSize / 2;
+  }
+
+  function createClickRipple(x, y) {
+    const ripple = document.createElement('div');
+    ripple.className = 'click-ripple';
+    ripple.style.left = x + 'px'; ripple.style.top = y + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 400);
+  }
+
+  function handleHover() {
+    cursor.style.display = 'none';
+    const elBelow = document.elementFromPoint(curX + 14, curY + 14);
+    cursor.style.display = 'block';
+    document.querySelectorAll('.sim-hover, .sim-focus').forEach(e => {
+      e.classList.remove('sim-hover'); e.classList.remove('sim-focus');
+    });
+    if (elBelow) {
+      const target = elBelow.closest('.op-tab, .run-btn, .file-item, .fi');
+      if (target) {
+        if (target.classList.contains('op-tab') || target.classList.contains('run-btn') || target.classList.contains('file-item')) target.classList.add('sim-hover');
+        else if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') target.classList.add('sim-focus');
+      }
+    }
+  }
+
+  async function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function runSimulation(mode) {
+    isSimulating = true;
+    document.getElementById('btn-sim-main').classList.add('running');
+    cursor.classList.add('active');
+    updateCursor();
+    log('sys', 'tag-sys', 'Demo sequence started');
+
+    // --- 1. WRITE STEP ---
+    if (mode === 'all' || mode === 'write') {
+      const writeTab = document.getElementById('tab-write');
+      if (!writeTab.classList.contains('active')) {
+        moveCursorTo(writeTab); await wait(600);
+        createClickRipple(curX + 14, curY + 14); writeTab.click(); await wait(300);
+      }
+      const nameInput = document.getElementById('w-name');
+      moveCursorTo(nameInput); await wait(500);
+      createClickRipple(curX + 14, curY + 14); await wait(150);
+      nameInput.focus(); nameInput.value = "";
+      const fname = "demo_log.txt";
+      for(let char of fname) { nameInput.value += char; await wait(80); }
+
+      const contentInput = document.getElementById('w-content');
+      moveCursorTo(contentInput); await wait(400);
+      createClickRipple(curX + 14, curY + 14); await wait(150);
+      contentInput.focus();
+      const content = "System check complete.\nAll nodes operational.";
+      for(let char of content) { contentInput.value += char; await wait(40); }
+
+      const writeBtn = document.getElementById('btn-write');
+      moveCursorTo(writeBtn); await wait(400);
+      createClickRipple(curX + 14, curY + 14); writeBtn.click(); await wait(1200);
+    }
+
+    // --- 2. READ STEP ---
+    if (mode === 'all' || mode === 'read') {
+      const readTab = document.getElementById('tab-read');
+      moveCursorTo(readTab); await wait(600);
+      createClickRipple(curX + 14, curY + 14); readTab.click(); await wait(400);
+
+      const readSelect = document.getElementById('r-name');
+      moveCursorTo(readSelect); await wait(500);
+      createClickRipple(curX + 14, curY + 14); readSelect.click(); await wait(200);
+      
+      // In a real browser sim, we'd try to find the <option> to click. 
+      // For this demo, we'll just wait to simulate picking the file.
+      // We assume 'demo_log.txt' exists from step 1 or user data.
+      await wait(300);
+      const fname = document.querySelector('#r-name option:nth-child(2)')?.value || "demo_log.txt";
+      readSelect.value = fname;
+      readSelect.classList.remove('empty');
+
+      const readBtn = document.getElementById('btn-read');
+      moveCursorTo(readBtn); await wait(400);
+      createClickRipple(curX + 14, curY + 14); readBtn.click(); await wait(1200);
+    }
+
+    // --- 3. DELETE STEP ---
+    if (mode === 'all' || mode === 'delete') {
+      const delTab = document.getElementById('tab-delete');
+      moveCursorTo(delTab); await wait(600);
+      createClickRipple(curX + 14, curY + 14); delTab.click(); await wait(400);
+
+      const delSelect = document.getElementById('d-name');
+      moveCursorTo(delSelect); await wait(500);
+      createClickRipple(curX + 14, curY + 14); await wait(200);
+      
+      const fname = document.querySelector('#d-name option:nth-child(2)')?.value || "demo_log.txt";
+      delSelect.value = fname;
+      delSelect.classList.remove('empty');
+
+      const delBtn = document.getElementById('btn-delete');
+      moveCursorTo(delBtn); await wait(400);
+      createClickRipple(curX + 14, curY + 14); delBtn.click(); await wait(1200);
+    }
+
+    // Cleanup
+    log('sys', 'tag-sys', 'Demo sequence finished');
+    targetX = window.innerWidth + 100; targetY = window.innerHeight + 100;
+    await wait(800);
+    cursor.classList.remove('active');
+    isSimulating = false;
+    document.getElementById('btn-sim-main').classList.remove('running');
+  }
+
+  // ── boot ───────────────────────────────────────────────────────────────────
+  log('sys','tag-sys','DFS client started');
+  heartbeat(false).then(() => loadFileList());
+  setInterval(() => heartbeat(true).then(() => loadFileList()), 3000);
+  setInterval(() => { if (Math.random() < 0.15) heartbeat(false); }, 6000);
+  ['r-name','d-name'].forEach(id => {
+    document.getElementById(id).addEventListener('change', function() {
+      this.classList.toggle('empty', !this.value);
+    });
+  });
+  targetX = window.innerWidth / 2; targetY = window.innerHeight / 2; curX = targetX; curY = targetY;
+</script>
+</body>
+</html>
