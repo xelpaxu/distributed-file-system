@@ -39,7 +39,6 @@
     overflow-x: hidden;
   }
 
-  /* ── top bar ── */
   .topbar {
     width: 100%; max-width: 1060px;
     display: flex; align-items: center; justify-content: space-between;
@@ -81,13 +80,11 @@
   .conn-dot.offline { background: var(--red); }
   .conn-dot.replica { background: var(--blue); }
 
-  /* ── Dropdown Wrapper ── */
   .sim-dropdown {
     position: relative;
     display: inline-block;
   }
 
-  /* Simulation Button */
   .btn-sim {
     font-family: var(--mono);
     font-size: 11px;
@@ -107,10 +104,10 @@
   .btn-sim:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
   .btn-sim:active { transform: translateY(1px); }
   .btn-sim.running { opacity: 0.6; pointer-events: none; }
-  
+
   .caret {
-    width: 0; 
-    height: 0; 
+    width: 0;
+    height: 0;
     border-left: 4px solid transparent;
     border-right: 4px solid transparent;
     border-top: 4px solid var(--lime);
@@ -119,7 +116,6 @@
   }
   .btn-sim:hover .caret { transform: translateY(1px); }
 
-  /* Dropdown Menu */
   .sim-menu {
     position: absolute;
     top: 100%;
@@ -160,10 +156,7 @@
   .sim-item:hover { background: var(--card2); color: var(--ink2); }
   .sim-item svg { width: 12px; height: 12px; opacity: 0.6; }
 
-  /* ── main grid ── */
-  .main { width: 100%; max-width: 1060px; display: grid; grid-template-columns: 1fr 280px; gap: 16px; position: relative; z-index: 5;}
-
-  /* ── left panel ── */
+  .main { width: 100%; max-width: 1060px; display: grid; grid-template-columns: 1fr 280px; gap: 16px; position: relative; z-index: 5; }
   .left { display: flex; flex-direction: column; gap: 16px; }
 
   .op-tabs { display: flex; gap: 6px; }
@@ -177,7 +170,6 @@
   }
   .op-tab:hover { background: var(--card2); color: var(--ink); }
   .op-tab.active { background: var(--ink); color: var(--lime); border-color: var(--ink); font-weight: 500; }
-  
   .op-tab.sim-hover { background: var(--card2); color: var(--ink); }
 
   .form-card {
@@ -200,7 +192,7 @@
   }
   input.fi:focus, textarea.fi:focus { border-color: var(--ink2); }
   input.fi.sim-focus, textarea.fi.sim-focus { border-color: var(--ink2); background: var(--card); }
-  
+
   textarea.fi { height: 90px; resize: none; line-height: 1.55; }
   select.fi {
     width: 100%; padding: 10px 13px;
@@ -247,7 +239,6 @@
     line-height: 1.5;
   }
 
-  /* ── log ── */
   .log-wrap { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
   .log-head {
     display: flex; align-items: center; justify-content: space-between;
@@ -280,7 +271,6 @@
   .le-m .hi2 { color: #7ab8ff; }
   .le-m .dim { color: #555; }
 
-  /* ── right panel ── */
   .right { display: flex; flex-direction: column; gap: 16px; }
 
   .panel {
@@ -292,7 +282,6 @@
     text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 12px;
   }
 
-  /* server cards */
   .server-card {
     display: flex; align-items: center; gap: 10px;
     padding: 11px 13px; border-radius: 11px;
@@ -314,13 +303,11 @@
   }
   .server-card.active .sc-badge { background: #2a2a28; border-color: #333; color: var(--lime-d); }
 
-  /* stats */
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .stat { background: var(--card2); border-radius: 10px; padding: 12px 14px; }
   .stat-n { font-size: 22px; font-weight: 500; color: var(--ink); line-height: 1; margin-bottom: 3px; }
   .stat-l { font-size: 10px; color: var(--ink3); font-family: var(--mono); }
 
-  /* file list */
   .file-item {
     display: flex; align-items: center; gap: 9px;
     padding: 8px 10px; border-radius: 9px; cursor: pointer;
@@ -344,7 +331,6 @@
     .topbar { flex-direction: column; gap: 12px; align-items: flex-start; }
   }
 
-  /* ── Ghost Cursor Styles ── */
   #ghost-cursor {
     position: fixed;
     top: 0; left: 0;
@@ -352,7 +338,7 @@
     pointer-events: none;
     z-index: 99999;
     will-change: transform;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a1917'%3E%3Cpath d='M5.5 2.25a.75.75 0 00-1.16.63l.005 17.85a.75.75 0 001.32.49l4.774-5.592a.75.75 0 01.57-.264h7.356a.75.75 0 00.496-1.31L6.37 2.54a.75.75 0 00-.87-.29z'/%3E%3Cpath d='M6 3v17l4.5-5.25h7.5L6 3z' fill='white' fill-opacity='0.4'/%3E%3C/svg%3E");
+    background-image: url("assets/default.svg");
     background-size: contain;
     background-repeat: no-repeat;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
@@ -360,7 +346,7 @@
     display: none;
   }
   #ghost-cursor.active { display: block; }
-  
+
   .click-ripple {
     position: absolute;
     width: 20px; height: 20px;
@@ -376,15 +362,12 @@
     0% { width: 0; height: 0; opacity: 0.8; }
     100% { width: 40px; height: 40px; opacity: 0; }
   }
-
 </style>
 </head>
 <body>
 
-<!-- Ghost Cursor -->
 <div id="ghost-cursor"></div>
 
-<!-- top bar -->
 <div class="topbar">
   <div class="brand">
     <div class="brand-icon">
@@ -404,48 +387,41 @@
       <div class="conn-dot" id="conn-dot"></div>
       <span id="conn-label">checking...</span>
     </div>
-    
-    <!-- Simulation Dropdown -->
     <div class="sim-dropdown" id="sim-dropdown">
-      <button class="btn-sim" id="btn-sim-main" onclick="toggleSimMenu()">
+      <button type="button" class="btn-sim" id="btn-sim-main">
         <span>Run Demo</span>
         <div class="caret"></div>
       </button>
       <div class="sim-menu" id="sim-menu">
-        <button class="sim-item" onclick="startSim('all')">
+        <button type="button" class="sim-item" data-sim="all">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
           Run All
         </button>
-        <button class="sim-item" onclick="startSim('write')">
+        <button type="button" class="sim-item" data-sim="write">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Write Only
         </button>
-        <button class="sim-item" onclick="startSim('read')">
+        <button type="button" class="sim-item" data-sim="read">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           Read Only
         </button>
-        <button class="sim-item" onclick="startSim('delete')">
+        <button type="button" class="sim-item" data-sim="delete">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
           Delete Only
         </button>
       </div>
     </div>
-
   </div>
 </div>
 
-<!-- main -->
 <div class="main">
   <div class="left">
-
-    <!-- tabs -->
     <div class="op-tabs">
-      <button class="op-tab active" id="tab-write" onclick="setOp('write')">Write</button>
-      <button class="op-tab"        id="tab-read"  onclick="setOp('read')">Read</button>
-      <button class="op-tab"        id="tab-delete" onclick="setOp('delete')">Delete</button>
+      <button type="button" class="op-tab active" id="tab-write" data-op="write">Write</button>
+      <button type="button" class="op-tab"        id="tab-read"  data-op="read">Read</button>
+      <button type="button" class="op-tab"        id="tab-delete" data-op="delete">Delete</button>
     </div>
 
-    <!-- write form -->
     <div class="form-card" id="form-write">
       <div class="form-grid">
         <div>
@@ -461,10 +437,9 @@
         <label class="lbl">Content</label>
         <textarea class="fi" id="w-content" placeholder="Enter file content here..."></textarea>
       </div>
-      <button class="run-btn btn-write" id="btn-write" onclick="doWrite()">Write file →</button>
+      <button type="button" class="run-btn btn-write" id="btn-write">Write file →</button>
     </div>
 
-    <!-- read form -->
     <div class="form-card" id="form-read" style="display:none">
       <div class="form-grid single">
         <div>
@@ -475,10 +450,9 @@
         </div>
       </div>
       <div class="result-box" id="read-result"></div>
-      <button class="run-btn btn-read" id="btn-read" onclick="doRead()">Read file →</button>
+      <button type="button" class="run-btn btn-read" id="btn-read">Read file →</button>
     </div>
 
-    <!-- delete form -->
     <div class="form-card" id="form-delete" style="display:none">
       <div class="form-grid single">
         <div>
@@ -489,23 +463,19 @@
         </div>
       </div>
       <div class="warn-box">This operation propagates to all replicas and cannot be undone.</div>
-      <button class="run-btn btn-delete" id="btn-delete" onclick="doDelete()">Delete file →</button>
+      <button type="button" class="run-btn btn-delete" id="btn-delete">Delete file →</button>
     </div>
 
-    <!-- log -->
     <div class="log-wrap">
       <div class="log-head">
         <span class="log-head-title">Activity log</span>
-        <button class="log-clear" onclick="clearLog()">clear</button>
+        <button type="button" class="log-clear" id="log-clear">clear</button>
       </div>
       <div class="log-stream" id="log"></div>
     </div>
-
   </div>
 
-  <!-- right sidebar -->
   <div class="right">
-
     <div class="panel">
       <div class="panel-title">Servers</div>
       <div class="server-card" id="sc-primary">
@@ -540,58 +510,100 @@
       <div class="panel-title">File index <span id="fcount" style="color:var(--ink3)">(0)</span></div>
       <div id="file-panel"><div class="empty-files">no files yet</div></div>
     </div>
-
   </div>
 </div>
 
 <script>
-  // ── state ──────────────────────────────────────────────────────────────────
-  let ops = 0, totalBytes = 0, files = {}, fileMeta = {};
-  let activeServer = 'primary';
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FIX #1 — HARD BLOCK all form submissions globally, capture phase
+     This catches ANY submit event bubbling from anywhere in the DOM,
+     including implicit browser-triggered ones we can't see.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  document.addEventListener('submit', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }, true);
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FIX #2 — Nuclear: force EVERY button to type="button" on DOM ready
+     Even if one slips through the HTML without it, this catches it.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  document.querySelectorAll('button').forEach(function(btn) {
+    btn.setAttribute('type', 'button');
+  });
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FIX #3 — Targeted Enter prevention ONLY on input/textarea
+     (not a blanket document-level block which can interfere with
+      accessibility and other keyboard shortcuts)
+     ═══════════════════════════════════════════════════════════════════════════ */
+  document.querySelectorAll('input, textarea').forEach(function(el) {
+    el.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        return false;
+      }
+    });
+  });
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FIX #5 — Safety: neutralize beforeunload side-effects
+     ═══════════════════════════════════════════════════════════════════════════ */
+  window.onbeforeunload = function() {
+    return null;
+  };
+
+  /* ── state ──────────────────────────────────────────────────────────────── */
+  var ops = 0, totalBytes = 0, files = {}, fileMeta = {};
+  var activeServer = 'primary';
 
   function bridgeUrl() {
-    const el = document.getElementById('bridge-input');
+    var el = document.getElementById('bridge-input');
     return el ? el.value.replace(/\/$/, '') : 'http://127.0.0.1:5000';
   }
 
-  // ── logging ────────────────────────────────────────────────────────────────
+  /* ── logging ────────────────────────────────────────────────────────────── */
   function ts() { return new Date().toTimeString().slice(0, 8); }
 
   function log(tag, cls, msg) {
-    const el = document.getElementById('log');
-    const d = document.createElement('div');
+    var el = document.getElementById('log');
+    var d = document.createElement('div');
     d.className = 'le';
-    d.innerHTML = `<span class="le-t">${ts()}</span><span class="le-tag ${cls}">${tag}</span><span class="le-m">${msg}</span>`;
+    d.innerHTML = '<span class="le-t">' + ts() + '</span><span class="le-tag ' + cls + '">' + tag + '</span><span class="le-m">' + msg + '</span>';
     el.appendChild(d);
     el.scrollTop = el.scrollHeight;
   }
 
-  function clearLog() { document.getElementById('log').innerHTML = ''; log('sys','tag-sys','Log cleared'); }
+  function clearLog() {
+    document.getElementById('log').innerHTML = '';
+    log('sys', 'tag-sys', 'Log cleared');
+  }
 
-  // ── tab switching ──────────────────────────────────────────────────────────
+  /* ── tab switching ──────────────────────────────────────────────────────── */
   function setOp(op) {
-    ['write','read','delete'].forEach(o => {
+    ['write', 'read', 'delete'].forEach(function(o) {
       document.getElementById('tab-' + o).classList.toggle('active', o === op);
       document.getElementById('form-' + o).style.display = o === op ? 'block' : 'none';
     });
   }
 
-  // ── server status UI ───────────────────────────────────────────────────────
+  /* ── server status UI ───────────────────────────────────────────────────── */
   function setServerStatus(primary, replica) {
-    const colors = { ok: 'var(--lime-d)', offline: 'var(--red)', unknown: 'var(--ink3)' };
-    const labels = { ok: 'online', offline: 'offline', unknown: '—' };
+    var colors = { ok: 'var(--lime-d)', offline: 'var(--red)', unknown: 'var(--ink3)' };
+    var labels = { ok: 'online', offline: 'offline', unknown: '—' };
 
-    document.getElementById('dot-primary').style.background = colors[primary] || colors.unknown;
-    document.getElementById('badge-primary').textContent    = labels[primary]  || '—';
-    document.getElementById('dot-replica').style.background = colors[replica]  || colors.unknown;
-    document.getElementById('badge-replica').textContent    = labels[replica]  || '—';
+    document.getElementById('dot-primary').style.background   = colors[primary]  || colors.unknown;
+    document.getElementById('badge-primary').textContent      = labels[primary]  || '—';
+    document.getElementById('dot-replica').style.background   = colors[replica]  || colors.unknown;
+    document.getElementById('badge-replica').textContent      = labels[replica]  || '—';
 
-    const usingReplica = primary === 'offline' && replica === 'ok';
+    var usingReplica = primary === 'offline' && replica === 'ok';
     document.getElementById('sc-primary').classList.toggle('active', !usingReplica && primary === 'ok');
     document.getElementById('sc-replica').classList.toggle('active', usingReplica);
 
-    const dot   = document.getElementById('conn-dot');
-    const label = document.getElementById('conn-label');
+    var dot   = document.getElementById('conn-dot');
+    var label = document.getElementById('conn-label');
     if (primary === 'ok') {
       dot.className = 'conn-dot'; label.textContent = 'PRIMARY :9000';
       activeServer = 'primary';
@@ -604,70 +616,63 @@
     }
   }
 
-  // ── heartbeat ──────────────────────────────────────────────────────────────
-  async function heartbeat(silent = false) {
+  /* ── heartbeat ──────────────────────────────────────────────────────────── */
+  async function heartbeat(silent) {
     try {
-      const r = await fetch(bridgeUrl() + '/heartbeat');
-      const d = await r.json();
-      const prev = activeServer;
+      var r = await fetch(bridgeUrl() + '/heartbeat');
+      var d = await r.json();
+      var prev = activeServer;
       setServerStatus(d.primary, d.replica);
       if (!silent) {
-        const srv = activeServer === 'primary' ? 'PRIMARY' : activeServer === 'replica' ? 'REPLICA' : 'none';
-        log('hb', 'tag-sys', `Heartbeat → primary <span class="hi">${d.primary}</span> · replica <span class="hi2">${d.replica}</span>`);
+        var srv = activeServer === 'primary' ? 'PRIMARY' : activeServer === 'replica' ? 'REPLICA' : 'none';
+        log('hb', 'tag-sys', 'Heartbeat → primary <span class="hi">' + d.primary + '</span> · replica <span class="hi2">' + d.replica + '</span>');
         if (prev !== activeServer && prev !== 'checking') {
-          log('sys', 'tag-warn', `Failover detected — now on <span class="hi">${srv}</span>`);
+          log('sys', 'tag-warn', 'Failover detected — now on <span class="hi">' + srv + '</span>');
         }
       }
-    } catch {
+    } catch (e) {
       setServerStatus('offline', 'offline');
     }
   }
 
-  // ── stats & file panel ─────────────────────────────────────────────────────
+  /* ── stats & file panel ─────────────────────────────────────────────────── */
   function updateStats() {
-    document.getElementById('s-files').textContent  = Object.keys(files).length;
-    document.getElementById('s-ops').textContent    = ops;
-    const b = Object.values(fileMeta).reduce((s, m) => s + (m.size || 0), 0) || totalBytes;
-    document.getElementById('s-bytes').textContent  = b > 9999 ? Math.round(b/1000) + 'k' : b;
-    document.getElementById('fcount').textContent   = '(' + Object.keys(files).length + ')';
+    document.getElementById('s-files').textContent = Object.keys(files).length;
+    document.getElementById('s-ops').textContent   = ops;
+    var b = Object.values(fileMeta).reduce(function(s, m) { return s + (m.size || 0); }, 0) || totalBytes;
+    document.getElementById('s-bytes').textContent = b > 9999 ? Math.round(b / 1000) + 'k' : b;
+    document.getElementById('fcount').textContent  = '(' + Object.keys(files).length + ')';
   }
 
   async function loadFileList() {
     try {
-      const r = await fetch(bridgeUrl() + '/list');
-      const d = await r.json();
+      var r = await fetch(bridgeUrl() + '/list');
+      var d = await r.json();
       if (d.status === 'OK' && Array.isArray(d.data)) {
-        const seen = new Set();
-        d.data.forEach(f => {
-          seen.add(f.name);
+        var seen = {};
+        d.data.forEach(function(f) {
+          seen[f.name] = true;
           if (!(f.name in files)) files[f.name] = null;
           if (!fileMeta[f.name]) fileMeta[f.name] = f;
         });
-        Object.keys(files).forEach(n => { if (!seen.has(n)) delete files[n]; });
+        Object.keys(files).forEach(function(n) { if (!seen[n]) delete files[n]; });
         updateStats();
         updateFilePanel();
       }
-    } catch { /* bridge not ready yet */ }
+    } catch (e) { /* bridge not ready */ }
   }
 
   function updateFilePanel() {
-    const panel = document.getElementById('file-panel');
-    const names = Object.keys(files);
+    var panel = document.getElementById('file-panel');
+    var names = Object.keys(files);
     if (!names.length) { panel.innerHTML = '<div class="empty-files">no files yet</div>'; return; }
-    panel.innerHTML = names.map(n => {
-      const meta = fileMeta[n];
-      const size = meta ? formatSize(meta.size) : (files[n] ? files[n].length + 'b' : '?');
-      return `
-        <div class="file-item" id="file-item-${n}" onclick="quickRead('${n}')">
-          <div class="fi-ico">
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1">
-              <path d="M1 1h7l3 3v7H1z" stroke-linejoin="round"/>
-              <path d="M7 1v3h3"/>
-            </svg>
-          </div>
-          <span class="fi-name">${n}</span>
-          <span class="fi-size">${size}</span>
-        </div>`;
+    panel.innerHTML = names.map(function(n) {
+      var meta = fileMeta[n];
+      var size = meta ? formatSize(meta.size) : (files[n] ? files[n].length + 'b' : '?');
+      return '<div class="file-item" id="file-item-' + n + '" data-filename="' + n + '">' +
+        '<div class="fi-ico"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1"><path d="M1 1h7l3 3v7H1z" stroke-linejoin="round"/><path d="M7 1v3h3"/></svg></div>' +
+        '<span class="fi-name">' + n + '</span>' +
+        '<span class="fi-size">' + size + '</span></div>';
     }).join('');
     updateDropdowns();
   }
@@ -678,19 +683,19 @@
   }
 
   function updateDropdowns() {
-    const names = Object.keys(files);
-    ['r-name','d-name'].forEach(id => {
-      const sel = document.getElementById(id);
-      const cur = sel.value;
+    var names = Object.keys(files);
+    ['r-name', 'd-name'].forEach(function(id) {
+      var sel = document.getElementById(id);
+      var cur = sel.value;
       sel.innerHTML = '<option value="">— select a file —</option>' +
-        names.map(n => `<option value="${n}"${n===cur?' selected':''}>${n}</option>`).join('');
+        names.map(function(n) { return '<option value="' + n + '"' + (n === cur ? ' selected' : '') + '>' + n + '</option>'; }).join('');
       sel.classList.toggle('empty', !sel.value);
     });
   }
 
   function quickRead(name) {
     setOp('read');
-    const sel = document.getElementById('r-name');
+    var sel = document.getElementById('r-name');
     sel.value = name;
     sel.classList.remove('empty');
     doRead();
@@ -700,10 +705,10 @@
     document.getElementById('s-latency').textContent = ms + 'ms';
   }
 
-  // ── API calls ──────────────────────────────────────────────────────────────
+  /* ── API calls ──────────────────────────────────────────────────────────── */
   async function apiFetch(path, body) {
-    const t0 = Date.now();
-    const r = await fetch(bridgeUrl() + path, {
+    var t0 = Date.now();
+    var r = await fetch(bridgeUrl() + path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
@@ -713,106 +718,105 @@
   }
 
   async function doWrite() {
-    const name    = document.getElementById('w-name').value.trim();
-    const content = document.getElementById('w-content').value;
-    if (!name)    { log('warn','tag-warn','Filename is required'); return; }
-    if (!content) { log('warn','tag-warn','Content cannot be empty'); return; }
+    var name    = document.getElementById('w-name').value.trim();
+    var content = document.getElementById('w-content').value;
+    if (!name)    { log('warn', 'tag-warn', 'Filename is required'); return; }
+    if (!content) { log('warn', 'tag-warn', 'Content cannot be empty'); return; }
 
-    const btn = document.getElementById('btn-write');
+    var btn = document.getElementById('btn-write');
     btn.disabled = true; btn.textContent = 'Writing...';
     ops++;
-    log('→','tag-sys',`WRITE <span class="hi">${name}</span> <span class="dim">(${content.length} bytes)</span>`);
+    log('→', 'tag-sys', 'WRITE <span class="hi">' + name + '</span> <span class="dim">(' + content.length + ' bytes)</span>');
 
     try {
-      const d = await apiFetch('/write', { filename: name, data: content });
+      var d = await apiFetch('/write', { filename: name, data: content });
       if (d.status === 'OK') {
         files[name] = content;
         totalBytes += content.length;
-        fileMeta[name] = { name, size: content.length, modified: Date.now()/1000 };
-        log('ok','tag-ok',`Wrote <span class="hi">${name}</span> successfully` + (d.failover ? ' <span class="dim">via replica</span>' : ''));
-        log('syn','tag-info','Propagated to replica');
+        fileMeta[name] = { name: name, size: content.length, modified: Date.now() / 1000 };
+        log('ok', 'tag-ok', 'Wrote <span class="hi">' + name + '</span> successfully' + (d.failover ? ' <span class="dim">via replica</span>' : ''));
+        log('syn', 'tag-info', 'Propagated to replica');
         document.getElementById('w-content').value = '';
         updateStats(); updateFilePanel();
       } else {
-        log('err','tag-err', d.message || 'Write failed');
+        log('err', 'tag-err', d.message || 'Write failed');
       }
-    } catch(e) {
-      log('err','tag-err','Bridge error: ' + e.message);
+    } catch (e) {
+      log('err', 'tag-err', 'Bridge error: ' + e.message);
     } finally {
       btn.disabled = false; btn.textContent = 'Write file →';
     }
   }
 
   async function doRead() {
-    const sel = document.getElementById('r-name');
-    const name = sel.value;
-    if (!name) { log('warn','tag-warn','Please select a file'); return; }
+    var sel = document.getElementById('r-name');
+    var name = sel.value;
+    if (!name) { log('warn', 'tag-warn', 'Please select a file'); return; }
 
-    const btn = document.getElementById('btn-read');
+    var btn = document.getElementById('btn-read');
     btn.disabled = true; btn.textContent = 'Reading...';
     ops++;
-    log('→','tag-sys',`READ <span class="hi">${name}</span>`);
+    log('→', 'tag-sys', 'READ <span class="hi">' + name + '</span>');
 
     try {
-      const d = await apiFetch('/read', { filename: name });
-      const box = document.getElementById('read-result');
+      var d = await apiFetch('/read', { filename: name });
+      var box = document.getElementById('read-result');
       if (d.status === 'OK') {
         box.style.display = 'block';
         box.textContent = d.data;
         files[name] = d.data;
-        log('ok','tag-ok',`Read <span class="hi">${name}</span>` + (d.failover ? ' <span class="dim">via replica</span>' : ''));
+        log('ok', 'tag-ok', 'Read <span class="hi">' + name + '</span>' + (d.failover ? ' <span class="dim">via replica</span>' : ''));
         updateStats(); updateFilePanel();
       } else {
         box.style.display = 'none';
-        log('err','tag-err', d.message || 'File not found');
+        log('err', 'tag-err', d.message || 'File not found');
       }
-    } catch(e) {
-      log('err','tag-err','Bridge error: ' + e.message);
+    } catch (e) {
+      log('err', 'tag-err', 'Bridge error: ' + e.message);
     } finally {
       btn.disabled = false; btn.textContent = 'Read file →';
     }
   }
 
   async function doDelete() {
-    const sel = document.getElementById('d-name');
-    const name = sel.value;
-    if (!name) { log('warn','tag-warn','Please select a file'); return; }
+    var sel = document.getElementById('d-name');
+    var name = sel.value;
+    if (!name) { log('warn', 'tag-warn', 'Please select a file'); return; }
 
-    const btn = document.getElementById('btn-delete');
+    var btn = document.getElementById('btn-delete');
     btn.disabled = true; btn.textContent = 'Deleting...';
     ops++;
-    log('→','tag-sys',`DELETE <span class="hi">${name}</span>`);
+    log('→', 'tag-sys', 'DELETE <span class="hi">' + name + '</span>');
 
     try {
-      const d = await apiFetch('/delete', { filename: name });
+      var d = await apiFetch('/delete', { filename: name });
       if (d.status === 'OK') {
-        if (files[name] !== undefined) { totalBytes -= (fileMeta[name]?.size || 0); delete files[name]; delete fileMeta[name]; }
-        log('ok','tag-ok',`Deleted <span class="hi">${name}</span>` + (d.failover ? ' <span class="dim">via replica</span>' : ''));
-        log('syn','tag-info','DELETE propagated to replica');
+        if (files[name] !== undefined) { totalBytes -= (fileMeta[name] ? fileMeta[name].size : 0); delete files[name]; delete fileMeta[name]; }
+        log('ok', 'tag-ok', 'Deleted <span class="hi">' + name + '</span>' + (d.failover ? ' <span class="dim">via replica</span>' : ''));
+        log('syn', 'tag-info', 'DELETE propagated to replica');
         sel.value = '';
         sel.classList.add('empty');
         updateStats(); updateFilePanel();
       } else {
-        log('err','tag-err', d.message || 'Delete failed');
+        log('err', 'tag-err', d.message || 'Delete failed');
       }
-    } catch(e) {
-      log('err','tag-err','Bridge error: ' + e.message);
+    } catch (e) {
+      log('err', 'tag-err', 'Bridge error: ' + e.message);
     } finally {
       btn.disabled = false; btn.textContent = 'Delete file →';
     }
   }
 
-  // ── Dropdown UI Logic ─────────────────────────────────────────────────────
-  const simMenu = document.getElementById('sim-menu');
-  const simBtnText = document.querySelector('#btn-sim-main span');
+  /* ── Dropdown UI Logic ──────────────────────────────────────────────────── */
+  var simMenu     = document.getElementById('sim-menu');
+  var simBtnText  = document.querySelector('#btn-sim-main span');
 
   function toggleSimMenu() {
     if (isSimulating) return;
     simMenu.classList.toggle('show');
   }
 
-  // Close dropdown when clicking outside
-  window.addEventListener('click', (e) => {
+  window.addEventListener('click', function(e) {
     if (!document.getElementById('sim-dropdown').contains(e.target)) {
       simMenu.classList.remove('show');
     }
@@ -821,35 +825,32 @@
   async function startSim(mode) {
     simMenu.classList.remove('show');
     if (isSimulating) return;
-    
-    // Update button text to reflect mode
-    if (mode === 'all') simBtnText.textContent = 'Run Demo';
-    if (mode === 'write') simBtnText.textContent = 'Write Demo';
-    if (mode === 'read') simBtnText.textContent = 'Read Demo';
+
+    if (mode === 'all')    simBtnText.textContent = 'Run Demo';
+    if (mode === 'write')  simBtnText.textContent = 'Write Demo';
+    if (mode === 'read')   simBtnText.textContent = 'Read Demo';
     if (mode === 'delete') simBtnText.textContent = 'Delete Demo';
 
-    runSimulation(mode).then(() => {
-      // Reset text after sim
-      setTimeout(() => { simBtnText.textContent = 'Run Demo'; }, 1000);
+    runSimulation(mode).then(function() {
+      setTimeout(function() { simBtnText.textContent = 'Run Demo'; }, 1000);
     });
   }
 
-  // ── Simulation & Ghost Cursor ───────────────────────────────────────────────
-  let isSimulating = false;
-  const cursor = document.getElementById('ghost-cursor');
-  const cursorSize = 28;
-  let targetX = 0, targetY = 0;
-  let curX = 0, curY = 0;
-  let animFrame;
+  /* ── Simulation & Ghost Cursor ──────────────────────────────────────────── */
+  var isSimulating = false;
+  var cursor = document.getElementById('ghost-cursor');
+  var cursorSize = 28;
+  var targetX = 0, targetY = 0;
+  var curX = 0, curY = 0;
+  var animFrame;
 
-  function lerp(start, end, t) { return start * (1 - t) + end * t; }
+  function lerp(a, b, t) { return a * (1 - t) + b * t; }
 
   function updateCursor() {
     curX = lerp(curX, targetX, 0.15);
     curY = lerp(curY, targetY, 0.15);
-    const offsetX = 2; 
-    const offsetY = 2;
-    cursor.style.transform = `translate3d(${curX + offsetX}px, ${curY + offsetY}px, 0)`;
+    var offsetX = 2, offsetY = 2;
+    cursor.style.transform = 'translate3d(' + (curX + offsetX) + 'px,' + (curY + offsetY) + 'px,0)';
     if (isSimulating) handleHover();
     if (isSimulating || Math.abs(curX - targetX) > 0.5 || Math.abs(curY - targetY) > 0.5) {
       animFrame = requestAnimationFrame(updateCursor);
@@ -857,132 +858,229 @@
   }
 
   function moveCursorTo(el) {
-    const rect = el.getBoundingClientRect();
+    var rect = el.getBoundingClientRect();
     targetX = rect.left + rect.width / 2 - cursorSize / 2;
     targetY = rect.top + rect.height / 2 - cursorSize / 2;
   }
 
   function createClickRipple(x, y) {
-    const ripple = document.createElement('div');
+    var ripple = document.createElement('div');
     ripple.className = 'click-ripple';
-    ripple.style.left = x + 'px'; ripple.style.top = y + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
     document.body.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 400);
+    setTimeout(function() { ripple.remove(); }, 400);
   }
 
   function handleHover() {
     cursor.style.display = 'none';
-    const elBelow = document.elementFromPoint(curX + 14, curY + 14);
+    var elBelow = document.elementFromPoint(curX + 14, curY + 14);
     cursor.style.display = 'block';
-    document.querySelectorAll('.sim-hover, .sim-focus').forEach(e => {
-      e.classList.remove('sim-hover'); e.classList.remove('sim-focus');
+    document.querySelectorAll('.sim-hover, .sim-focus').forEach(function(e) {
+      e.classList.remove('sim-hover');
+      e.classList.remove('sim-focus');
     });
     if (elBelow) {
-      const target = elBelow.closest('.op-tab, .run-btn, .file-item, .fi');
+      var target = elBelow.closest('.op-tab, .run-btn, .file-item, .fi');
       if (target) {
-        if (target.classList.contains('op-tab') || target.classList.contains('run-btn') || target.classList.contains('file-item')) target.classList.add('sim-hover');
-        else if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') target.classList.add('sim-focus');
+        if (target.classList.contains('op-tab') || target.classList.contains('run-btn') || target.classList.contains('file-item')) {
+          target.classList.add('sim-hover');
+        } else if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+          target.classList.add('sim-focus');
+        }
       }
     }
   }
 
-  async function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function wait(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+  /* waitForCondition helper */
+  function waitForCondition(fn, timeout) {
+    timeout = timeout || 10000;
+    return new Promise(function(resolve, reject) {
+      var start = Date.now();
+      var interval = setInterval(function() {
+        if (fn()) {
+          clearInterval(interval);
+          resolve();
+        } else if (Date.now() - start > timeout) {
+          clearInterval(interval);
+          reject('Timeout waiting for condition');
+        }
+      }, 100);
+    });
+  }
+
+  /* controllable heartbeat */
+  var heartbeatTimer = null;
+
+  function startHeartbeat() {
+    stopHeartbeat();
+    heartbeatTimer = setInterval(function() {
+      heartbeat(true).then(function() { loadFileList(); });
+    }, 3000);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FIX #4 — Safe click dispatcher
+     Uses dispatchEvent(new MouseEvent(...)) instead of .click()
+     This prevents the browser from interpreting simulated clicks
+     as implicit form submit triggers.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  function safeClick(el) {
+    el.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    }));
+  }
 
   async function runSimulation(mode) {
+    stopHeartbeat();
+
     isSimulating = true;
     document.getElementById('btn-sim-main').classList.add('running');
     cursor.classList.add('active');
     updateCursor();
     log('sys', 'tag-sys', 'Demo sequence started');
 
-    // --- 1. WRITE STEP ---
-    if (mode === 'all' || mode === 'write') {
-      const writeTab = document.getElementById('tab-write');
-      if (!writeTab.classList.contains('active')) {
-        moveCursorTo(writeTab); await wait(600);
-        createClickRipple(curX + 14, curY + 14); writeTab.click(); await wait(300);
+    try {
+      /* ── WRITE ── */
+      if (mode === 'all' || mode === 'write') {
+        var writeTab = document.getElementById('tab-write');
+        if (!writeTab.classList.contains('active')) {
+          moveCursorTo(writeTab); await wait(600);
+          createClickRipple(curX + 14, curY + 14); safeClick(writeTab); await wait(300);
+        }
+
+        var nameInput = document.getElementById('w-name');
+        moveCursorTo(nameInput); await wait(500);
+        createClickRipple(curX + 14, curY + 14); await wait(150);
+        nameInput.focus(); nameInput.value = '';
+        var fname = 'demo_log.txt';
+        for (var i = 0; i < fname.length; i++) { nameInput.value += fname[i]; await wait(80); }
+
+        var contentInput = document.getElementById('w-content');
+        moveCursorTo(contentInput); await wait(400);
+        createClickRipple(curX + 14, curY + 14); await wait(150);
+        contentInput.focus();
+        var content = 'System check complete.\nAll nodes operational.';
+        for (var j = 0; j < content.length; j++) { contentInput.value += content[j]; await wait(40); }
+
+        var writeBtn = document.getElementById('btn-write');
+        moveCursorTo(writeBtn); await wait(400);
+        createClickRipple(curX + 14, curY + 14);
+        safeClick(writeBtn);
+        await waitForCondition(function() { return 'demo_log.txt' in files; });
+        await wait(200);
       }
-      const nameInput = document.getElementById('w-name');
-      moveCursorTo(nameInput); await wait(500);
-      createClickRipple(curX + 14, curY + 14); await wait(150);
-      nameInput.focus(); nameInput.value = "";
-      const fname = "demo_log.txt";
-      for(let char of fname) { nameInput.value += char; await wait(80); }
 
-      const contentInput = document.getElementById('w-content');
-      moveCursorTo(contentInput); await wait(400);
-      createClickRipple(curX + 14, curY + 14); await wait(150);
-      contentInput.focus();
-      const content = "System check complete.\nAll nodes operational.";
-      for(let char of content) { contentInput.value += char; await wait(40); }
+      /* ── READ ── */
+      if (mode === 'all' || mode === 'read') {
+        var readTab = document.getElementById('tab-read');
+        moveCursorTo(readTab); await wait(600);
+        createClickRipple(curX + 14, curY + 14); safeClick(readTab); await wait(400);
 
-      const writeBtn = document.getElementById('btn-write');
-      moveCursorTo(writeBtn); await wait(400);
-      createClickRipple(curX + 14, curY + 14); writeBtn.click(); await wait(1200);
+        var readSelect = document.getElementById('r-name');
+        moveCursorTo(readSelect); await wait(500);
+        createClickRipple(curX + 14, curY + 14); await wait(200);
+
+        var readFname = Object.keys(files)[0];
+        if (readFname) {
+          readSelect.value = readFname;
+          readSelect.classList.remove('empty');
+        }
+
+        var readBtn = document.getElementById('btn-read');
+        moveCursorTo(readBtn); await wait(400);
+        createClickRipple(curX + 14, curY + 14);
+        safeClick(readBtn);
+        await waitForCondition(function() { return document.getElementById('read-result').textContent.length > 0; });
+        await wait(200);
+      }
+
+      /* ── DELETE ── */
+      if (mode === 'all' || mode === 'delete') {
+        var delTab = document.getElementById('tab-delete');
+        moveCursorTo(delTab); await wait(600);
+        createClickRipple(curX + 14, curY + 14); safeClick(delTab); await wait(400);
+
+        var delSelect = document.getElementById('d-name');
+        moveCursorTo(delSelect); await wait(500);
+        createClickRipple(curX + 14, curY + 14); await wait(200);
+
+        var delFname = Object.keys(files)[0];
+        if (delFname) {
+          delSelect.value = delFname;
+          delSelect.classList.remove('empty');
+        }
+
+        var delBtn = document.getElementById('btn-delete');
+        moveCursorTo(delBtn); await wait(400);
+        createClickRipple(curX + 14, curY + 14);
+        safeClick(delBtn);
+        await waitForCondition(function() { return !(delFname in files); });
+        await wait(200);
+      }
+    } catch (e) {
+      log('err', 'tag-err', 'Simulation error: ' + e);
     }
 
-    // --- 2. READ STEP ---
-    if (mode === 'all' || mode === 'read') {
-      const readTab = document.getElementById('tab-read');
-      moveCursorTo(readTab); await wait(600);
-      createClickRipple(curX + 14, curY + 14); readTab.click(); await wait(400);
-
-      const readSelect = document.getElementById('r-name');
-      moveCursorTo(readSelect); await wait(500);
-      createClickRipple(curX + 14, curY + 14); readSelect.click(); await wait(200);
-      
-      // In a real browser sim, we'd try to find the <option> to click. 
-      // For this demo, we'll just wait to simulate picking the file.
-      // We assume 'demo_log.txt' exists from step 1 or user data.
-      await wait(300);
-      const fname = document.querySelector('#r-name option:nth-child(2)')?.value || "demo_log.txt";
-      readSelect.value = fname;
-      readSelect.classList.remove('empty');
-
-      const readBtn = document.getElementById('btn-read');
-      moveCursorTo(readBtn); await wait(400);
-      createClickRipple(curX + 14, curY + 14); readBtn.click(); await wait(1200);
-    }
-
-    // --- 3. DELETE STEP ---
-    if (mode === 'all' || mode === 'delete') {
-      const delTab = document.getElementById('tab-delete');
-      moveCursorTo(delTab); await wait(600);
-      createClickRipple(curX + 14, curY + 14); delTab.click(); await wait(400);
-
-      const delSelect = document.getElementById('d-name');
-      moveCursorTo(delSelect); await wait(500);
-      createClickRipple(curX + 14, curY + 14); await wait(200);
-      
-      const fname = document.querySelector('#d-name option:nth-child(2)')?.value || "demo_log.txt";
-      delSelect.value = fname;
-      delSelect.classList.remove('empty');
-
-      const delBtn = document.getElementById('btn-delete');
-      moveCursorTo(delBtn); await wait(400);
-      createClickRipple(curX + 14, curY + 14); delBtn.click(); await wait(1200);
-    }
-
-    // Cleanup
     log('sys', 'tag-sys', 'Demo sequence finished');
-    targetX = window.innerWidth + 100; targetY = window.innerHeight + 100;
+    targetX = window.innerWidth + 100;
+    targetY = window.innerHeight + 100;
     await wait(800);
     cursor.classList.remove('active');
     isSimulating = false;
     document.getElementById('btn-sim-main').classList.remove('running');
+
+    startHeartbeat();
   }
 
-  // ── boot ───────────────────────────────────────────────────────────────────
-  log('sys','tag-sys','DFS client started');
-  heartbeat(false).then(() => loadFileList());
-  setInterval(() => heartbeat(true).then(() => loadFileList()), 3000);
-  setInterval(() => { if (Math.random() < 0.15) heartbeat(false); }, 6000);
-  ['r-name','d-name'].forEach(id => {
+  /* ── wire up all event listeners ────────────────────────────────────────── */
+
+  document.getElementById('btn-write').addEventListener('click', doWrite);
+  document.getElementById('btn-read').addEventListener('click', doRead);
+  document.getElementById('btn-delete').addEventListener('click', doDelete);
+
+  document.querySelectorAll('.op-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() { setOp(this.getAttribute('data-op')); });
+  });
+
+  document.getElementById('btn-sim-main').addEventListener('click', toggleSimMenu);
+
+  document.querySelectorAll('.sim-item').forEach(function(item) {
+    item.addEventListener('click', function() { startSim(this.getAttribute('data-sim')); });
+  });
+
+  document.getElementById('log-clear').addEventListener('click', clearLog);
+
+  document.getElementById('file-panel').addEventListener('click', function(e) {
+    var item = e.target.closest('.file-item');
+    if (item) quickRead(item.getAttribute('data-filename'));
+  });
+
+  ['r-name', 'd-name'].forEach(function(id) {
     document.getElementById(id).addEventListener('change', function() {
       this.classList.toggle('empty', !this.value);
     });
   });
-  targetX = window.innerWidth / 2; targetY = window.innerHeight / 2; curX = targetX; curY = targetY;
+
+  /* ── boot ───────────────────────────────────────────────────────────────── */
+  log('sys', 'tag-sys', 'DFS client started');
+  heartbeat(false).then(function() { loadFileList(); });
+  startHeartbeat();
+  setInterval(function() { if (Math.random() < 0.15) heartbeat(false); }, 6000);
+
+  /* Initialize cursor position off-screen */
+  targetX = window.innerWidth / 2;
+  targetY = window.innerHeight / 2;
+  curX = targetX;
+  curY = targetY;
 </script>
 </body>
 </html>

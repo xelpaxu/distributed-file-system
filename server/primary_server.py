@@ -1,7 +1,3 @@
-# =============================================================================
-# server/primary_server.py
-# =============================================================================
-#
 # PURPOSE:
 #   The PRIMARY REPLICA MANAGER in our passive (primary-backup) replication
 #   scheme. This process:
