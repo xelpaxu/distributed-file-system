@@ -106,7 +106,10 @@ def heartbeat():
         try:
             resp = call_server(host, port,
                                {"op": "HEARTBEAT", "request_id": ""})
-            results[name] = "ok" if resp and resp.get("status") == "OK" else "error"
+            results[name] = (
+                "ok" if resp and resp.get("status") == "OK"
+                else "offline"
+            )
         except Exception:
             results[name] = "offline"
     return jsonify(results)

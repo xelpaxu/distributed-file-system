@@ -362,6 +362,49 @@
     0% { width: 0; height: 0; opacity: 0.8; }
     100% { width: 40px; height: 40px; opacity: 0; }
   }
+
+  .custom-select {
+    position: relative;
+    cursor: pointer;
+  }
+
+  .cs-selected {
+    padding: 10px 13px;
+    background: var(--card2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .cs-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-top: 4px;
+    display: none;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 50;
+  }
+
+  .cs-options.open {
+    display: block;
+  }
+
+  .cs-option {
+    padding: 8px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .cs-option:hover {
+    background: var(--card2);
+  }
 </style>
 </head>
 <body>
@@ -444,9 +487,10 @@
       <div class="form-grid single">
         <div>
           <label class="lbl">Choose file</label>
-          <select class="fi empty" id="r-name">
-            <option value="">— select a file —</option>
-          </select>
+          <div class="custom-select fi" id="r-select">
+            <div class="cs-selected" data-value="">— select a file —</div>
+            <div class="cs-options"></div>
+          </div>
         </div>
       </div>
       <div class="result-box" id="read-result"></div>
@@ -457,9 +501,10 @@
       <div class="form-grid single">
         <div>
           <label class="lbl">Choose file</label>
-          <select class="fi empty" id="d-name">
-            <option value="">— select a file —</option>
-          </select>
+          <div class="custom-select fi" id="d-select">
+            <div class="cs-selected" data-value="">— select a file —</div>
+            <div class="cs-options"></div>
+          </div>
         </div>
       </div>
       <div class="warn-box">This operation propagates to all replicas and cannot be undone.</div>
@@ -515,29 +560,23 @@
 
 <script>
   /* ═══════════════════════════════════════════════════════════════════════════
-     FIX #1 — HARD BLOCK all form submissions globally, capture phase
-     This catches ANY submit event bubbling from anywhere in the DOM,
-     including implicit browser-triggered ones we can't see.
+     HARD PROTECTIONS — Prevent any form of page reload or navigation
      ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* 1. Block ALL form submissions at capture phase */
   document.addEventListener('submit', function(e) {
+    console.log('🚨 FORM SUBMIT BLOCKED on', e.target);
     e.preventDefault();
     e.stopPropagation();
     return false;
   }, true);
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     FIX #2 — Nuclear: force EVERY button to type="button" on DOM ready
-     Even if one slips through the HTML without it, this catches it.
-     ═══════════════════════════════════════════════════════════════════════════ */
+  /* 2. Force every button to type="button" */
   document.querySelectorAll('button').forEach(function(btn) {
     btn.setAttribute('type', 'button');
   });
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     FIX #3 — Targeted Enter prevention ONLY on input/textarea
-     (not a blanket document-level block which can interfere with
-      accessibility and other keyboard shortcuts)
-     ═══════════════════════════════════════════════════════════════════════════ */
+  /* 3. Block Enter on inputs (targeted, not blanket) */
   document.querySelectorAll('input, textarea').forEach(function(el) {
     el.addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
@@ -547,12 +586,52 @@
     });
   });
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     FIX #5 — Safety: neutralize beforeunload side-effects
-     ═══════════════════════════════════════════════════════════════════════════ */
-  window.onbeforeunload = function() {
-    return null;
-  };
+  /* 4. Neutralize any <form> elements directly */
+  document.querySelectorAll('form').forEach(function(f) {
+    f.onsubmit = function(e) {
+      console.log('🚨 FORM ONSUBMIT BLOCKED on', f);
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      return false;
+    };
+  });
+
+  /* 5. Intercept navigation methods */
+  var origAssign = window.location.assign;
+  var origReplace = window.location.replace;
+  Object.defineProperty(window.location, 'assign', {
+    value: function() { console.log('🚨 BLOCKED location.assign', arguments); }
+  });
+  Object.defineProperty(window.location, 'replace', {
+    value: function() { console.log('🚨 BLOCKED location.replace', arguments); }
+  });
+
+  /* 6. Block href="#" clicks globally */
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (a && (a.getAttribute('href') === '#' || a.getAttribute('href') === '')) {
+      console.log('🚨 BLOCKED anchor click', a);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  /* 7. Debug logging for unload/reload detection */
+  window.addEventListener('beforeunload', function(e) {
+    console.log('🚨 BEFORE UNLOAD TRIGGERED — stack:', new Error().stack);
+    e.preventDefault();
+    e.returnValue = '';
+  });
+  window.addEventListener('unload', function() {
+    console.log('🚨 UNLOAD EVENT FIRED');
+  });
+
+  /* 8. CRITICAL: Catch ALL unhandled async rejections before they tear down
+     the page. This is the actual root cause of the "reload" — unhandled
+     promise rejections from simulation timeouts crash the page context. */
+  window.addEventListener('unhandledrejection', function(event) {
+    console.error('🚨 UNHANDLED REJECTION (would crash page):', event.reason);
+    event.preventDefault();
+  });
 
   /* ── state ──────────────────────────────────────────────────────────────── */
   var ops = 0, totalBytes = 0, files = {}, fileMeta = {};
@@ -674,7 +753,8 @@
         '<span class="fi-name">' + n + '</span>' +
         '<span class="fi-size">' + size + '</span></div>';
     }).join('');
-    updateDropdowns();
+    updateCustomSelect('r-select');
+    updateCustomSelect('d-select');
   }
 
   function formatSize(bytes) {
@@ -682,22 +762,29 @@
     return bytes + 'b';
   }
 
-  function updateDropdowns() {
+  function updateCustomSelect(id) {
+    var root = document.getElementById(id);
+    var selected = root.querySelector('.cs-selected');
+    var optionsBox = root.querySelector('.cs-options');
+
     var names = Object.keys(files);
-    ['r-name', 'd-name'].forEach(function(id) {
-      var sel = document.getElementById(id);
-      var cur = sel.value;
-      sel.innerHTML = '<option value="">— select a file —</option>' +
-        names.map(function(n) { return '<option value="' + n + '"' + (n === cur ? ' selected' : '') + '>' + n + '</option>'; }).join('');
-      sel.classList.toggle('empty', !sel.value);
-    });
+
+    optionsBox.innerHTML = names.map(function(n) {
+      return '<div class="cs-option" data-value="' + n + '">' + n + '</div>';
+    }).join('');
+
+    if (!names.length) {
+      selected.textContent = '— no files —';
+      selected.dataset.value = '';
+    }
   }
 
+  /* FIX: quickRead now sets the custom-select value instead of a non-existent input */
   function quickRead(name) {
     setOp('read');
-    var sel = document.getElementById('r-name');
-    sel.value = name;
-    sel.classList.remove('empty');
+    var sel = document.querySelector('#r-select .cs-selected');
+    sel.textContent = name;
+    sel.dataset.value = name;
     doRead();
   }
 
@@ -749,8 +836,8 @@
   }
 
   async function doRead() {
-    var sel = document.getElementById('r-name');
-    var name = sel.value;
+    var sel = document.querySelector('#r-select .cs-selected');
+    var name = sel.dataset.value;
     if (!name) { log('warn', 'tag-warn', 'Please select a file'); return; }
 
     var btn = document.getElementById('btn-read');
@@ -779,8 +866,8 @@
   }
 
   async function doDelete() {
-    var sel = document.getElementById('d-name');
-    var name = sel.value;
+    var sel = document.querySelector('#d-select .cs-selected');
+    var name = sel.dataset.value;
     if (!name) { log('warn', 'tag-warn', 'Please select a file'); return; }
 
     var btn = document.getElementById('btn-delete');
@@ -794,8 +881,9 @@
         if (files[name] !== undefined) { totalBytes -= (fileMeta[name] ? fileMeta[name].size : 0); delete files[name]; delete fileMeta[name]; }
         log('ok', 'tag-ok', 'Deleted <span class="hi">' + name + '</span>' + (d.failover ? ' <span class="dim">via replica</span>' : ''));
         log('syn', 'tag-info', 'DELETE propagated to replica');
-        sel.value = '';
-        sel.classList.add('empty');
+        /* FIX: reset the custom-select properly (it's a div, not an input) */
+        sel.textContent = '— select a file —';
+        sel.dataset.value = '';
         updateStats(); updateFilePanel();
       } else {
         log('err', 'tag-err', d.message || 'Delete failed');
@@ -831,8 +919,11 @@
     if (mode === 'read')   simBtnText.textContent = 'Read Demo';
     if (mode === 'delete') simBtnText.textContent = 'Delete Demo';
 
+    /* FIX: add .catch() so rejection never escapes unhandled */
     runSimulation(mode).then(function() {
       setTimeout(function() { simBtnText.textContent = 'Run Demo'; }, 1000);
+    }).catch(function(err) {
+      console.error('🚨 Simulation outer catch:', err);
     });
   }
 
@@ -844,11 +935,13 @@
   var curX = 0, curY = 0;
   var animFrame;
 
+  var SIM_SPEED = 1.8;
+
   function lerp(a, b, t) { return a * (1 - t) + b * t; }
 
   function updateCursor() {
-    curX = lerp(curX, targetX, 0.15);
-    curY = lerp(curY, targetY, 0.15);
+    curX = lerp(curX, targetX, 0.08);
+    curY = lerp(curY, targetY, 0.08);
     var offsetX = 2, offsetY = 2;
     cursor.style.transform = 'translate3d(' + (curX + offsetX) + 'px,' + (curY + offsetY) + 'px,0)';
     if (isSimulating) handleHover();
@@ -892,9 +985,13 @@
     }
   }
 
-  function wait(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+  function wait(ms) {
+    return new Promise(function(r) {
+      setTimeout(r, ms * SIM_SPEED);
+    });
+  }
 
-  /* waitForCondition helper */
+  /* FIX: Added settle delay + double-check to prevent transient false-positives */
   function waitForCondition(fn, timeout) {
     timeout = timeout || 10000;
     return new Promise(function(resolve, reject) {
@@ -902,7 +999,21 @@
       var interval = setInterval(function() {
         if (fn()) {
           clearInterval(interval);
-          resolve();
+          /* Allow pending microtasks/event handlers (e.g. custom-select
+             click handlers setting dataset.value) to complete before
+             declaring the condition met. */
+          setTimeout(function() {
+            if (fn()) { resolve(); }
+            else {
+              /* Condition was transiently true; resume polling */
+              var remaining = timeout - (Date.now() - start);
+              if (remaining > 0) {
+                waitForCondition(fn, remaining).then(resolve, reject);
+              } else {
+                reject('Condition transiently met then reversed');
+              }
+            }
+          }, 50);
         } else if (Date.now() - start > timeout) {
           clearInterval(interval);
           reject('Timeout waiting for condition');
@@ -925,12 +1036,9 @@
     if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     FIX #4 — Safe click dispatcher
-     Uses dispatchEvent(new MouseEvent(...)) instead of .click()
-     This prevents the browser from interpreting simulated clicks
-     as implicit form submit triggers.
-     ═══════════════════════════════════════════════════════════════════════════ */
+  /* Safe click dispatcher — uses dispatchEvent instead of .click()
+     to prevent browser from interpreting simulated clicks as
+     implicit form submit triggers. */
   function safeClick(el) {
     el.dispatchEvent(new MouseEvent('click', {
       bubbles: true,
@@ -969,11 +1077,12 @@
         createClickRipple(curX + 14, curY + 14); await wait(150);
         contentInput.focus();
         var content = 'System check complete.\nAll nodes operational.';
-        for (var j = 0; j < content.length; j++) { contentInput.value += content[j]; await wait(40); }
+        for (var j = 0; j < content.length; j++) { contentInput.value += content[j]; await wait(70 + Math.random() * 60); }
 
         var writeBtn = document.getElementById('btn-write');
         moveCursorTo(writeBtn); await wait(400);
         createClickRipple(curX + 14, curY + 14);
+        await wait(200 + Math.random() * 200);
         safeClick(writeBtn);
         await waitForCondition(function() { return 'demo_log.txt' in files; });
         await wait(200);
@@ -983,21 +1092,35 @@
       if (mode === 'all' || mode === 'read') {
         var readTab = document.getElementById('tab-read');
         moveCursorTo(readTab); await wait(600);
-        createClickRipple(curX + 14, curY + 14); safeClick(readTab); await wait(400);
+        createClickRipple(curX + 14, curY + 14); await wait(200 + Math.random() * 200); safeClick(readTab); await wait(400);
 
-        var readSelect = document.getElementById('r-name');
+        var readSelect = document.querySelector('#r-select .cs-selected');
         moveCursorTo(readSelect); await wait(500);
-        createClickRipple(curX + 14, curY + 14); await wait(200);
+        createClickRipple(curX + 14, curY + 14);
+
+        await wait(200 + Math.random() * 200);
+        safeClick(readSelect);
+        await wait(300);
 
         var readFname = Object.keys(files)[0];
         if (readFname) {
-          readSelect.value = readFname;
-          readSelect.classList.remove('empty');
+          var option = document.querySelector('#r-select .cs-option[data-value="' + readFname + '"]');
+          if (option) {
+            moveCursorTo(option); await wait(300);
+            createClickRipple(curX + 14, curY + 14);
+            await wait(200 + Math.random() * 200);
+            safeClick(option);
+            /* Wait until the custom-select has actually registered the value */
+            await waitForCondition(function() {
+              return document.querySelector('#r-select .cs-selected').dataset.value === readFname;
+            }, 3000);
+          }
         }
 
         var readBtn = document.getElementById('btn-read');
         moveCursorTo(readBtn); await wait(400);
         createClickRipple(curX + 14, curY + 14);
+        await wait(200 + Math.random() * 200);
         safeClick(readBtn);
         await waitForCondition(function() { return document.getElementById('read-result').textContent.length > 0; });
         await wait(200);
@@ -1007,21 +1130,37 @@
       if (mode === 'all' || mode === 'delete') {
         var delTab = document.getElementById('tab-delete');
         moveCursorTo(delTab); await wait(600);
-        createClickRipple(curX + 14, curY + 14); safeClick(delTab); await wait(400);
+        createClickRipple(curX + 14, curY + 14); await wait(200 + Math.random() * 200); safeClick(delTab); await wait(400);
 
-        var delSelect = document.getElementById('d-name');
+        var delSelect = document.querySelector('#d-select .cs-selected');
         moveCursorTo(delSelect); await wait(500);
-        createClickRipple(curX + 14, curY + 14); await wait(200);
+        createClickRipple(curX + 14, curY + 14);
+
+        await wait(200 + Math.random() * 200);
+        safeClick(delSelect);
+        await wait(300);
 
         var delFname = Object.keys(files)[0];
         if (delFname) {
-          delSelect.value = delFname;
-          delSelect.classList.remove('empty');
+          var option = document.querySelector('#d-select .cs-option[data-value="' + delFname + '"]');
+          if (option) {
+            moveCursorTo(option); await wait(300);
+            createClickRipple(curX + 14, curY + 14);
+            await wait(200 + Math.random() * 200);
+            safeClick(option);
+            /* Wait until the custom-select has actually registered the value.
+               Without this, doDelete() reads an empty dataset.value and
+               the subsequent waitForCondition for file removal times out. */
+            await waitForCondition(function() {
+              return document.querySelector('#d-select .cs-selected').dataset.value === delFname;
+            }, 3000);
+          }
         }
 
         var delBtn = document.getElementById('btn-delete');
         moveCursorTo(delBtn); await wait(400);
         createClickRipple(curX + 14, curY + 14);
+        await wait(200 + Math.random() * 200);
         safeClick(delBtn);
         await waitForCondition(function() { return !(delFname in files); });
         await wait(200);
@@ -1051,6 +1190,35 @@
     tab.addEventListener('click', function() { setOp(this.getAttribute('data-op')); });
   });
 
+  document.querySelectorAll('.custom-select').forEach(function(select) {
+    var selected = select.querySelector('.cs-selected');
+    var options = select.querySelector('.cs-options');
+
+    selected.addEventListener('click', function() {
+      document.querySelectorAll('.cs-options').forEach(function(o) {
+        if (o !== options) o.classList.remove('open');
+      });
+      options.classList.toggle('open');
+    });
+
+    options.addEventListener('click', function(e) {
+      var opt = e.target.closest('.cs-option');
+      if (!opt) return;
+
+      selected.textContent = opt.textContent;
+      selected.dataset.value = opt.dataset.value;
+      options.classList.remove('open');
+    });
+  });
+
+  window.addEventListener('click', function(e) {
+    if (!e.target.closest('.custom-select')) {
+      document.querySelectorAll('.cs-options').forEach(function(o) {
+        o.classList.remove('open');
+      });
+    }
+  });
+
   document.getElementById('btn-sim-main').addEventListener('click', toggleSimMenu);
 
   document.querySelectorAll('.sim-item').forEach(function(item) {
@@ -1062,12 +1230,6 @@
   document.getElementById('file-panel').addEventListener('click', function(e) {
     var item = e.target.closest('.file-item');
     if (item) quickRead(item.getAttribute('data-filename'));
-  });
-
-  ['r-name', 'd-name'].forEach(function(id) {
-    document.getElementById(id).addEventListener('change', function() {
-      this.classList.toggle('empty', !this.value);
-    });
   });
 
   /* ── boot ───────────────────────────────────────────────────────────────── */
